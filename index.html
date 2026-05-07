@@ -1,0 +1,4163 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="タスクv3">
+  <meta name="theme-color" content="#667eea">
+  <title>タスク管理ツール v3</title>
+  <script src="https://apis.google.com/js/api.js" async></script>
+  <script src="https://accounts.google.com/gsi/client" async></script>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:'Segoe UI','Hiragino Sans','Meiryo',sans-serif;background:#f0f4f8;color:#2d3748;min-height:100vh}
+
+    /* Header */
+    header{background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:white;padding:18px 26px;
+      box-shadow:0 4px 12px rgba(102,126,234,0.4);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
+    header h1{font-size:1.55rem;font-weight:700;letter-spacing:-0.5px}
+    header p{font-size:0.83rem;opacity:0.85;margin-top:3px}
+    .header-btns{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+    .btn-h{background:rgba(255,255,255,0.18);border:1.5px solid rgba(255,255,255,0.42);color:white;
+      border-radius:9px;padding:7px 12px;font-size:0.78rem;font-weight:600;cursor:pointer;
+      font-family:inherit;transition:background 0.2s;white-space:nowrap}
+    .btn-h:hover{background:rgba(255,255,255,0.30)}
+    .btn-h-yellow{background:rgba(255,220,80,0.22);border-color:rgba(255,220,80,0.55)}
+    .btn-h-yellow:hover{background:rgba(255,220,80,0.35)}
+    .btn-h-purple{background:rgba(159,122,234,0.28);border-color:rgba(159,122,234,0.6)}
+    .btn-h-purple:hover{background:rgba(159,122,234,0.40)}
+    .btn-h-green{background:rgba(72,187,120,0.28);border-color:rgba(72,187,120,0.6)}
+    .btn-h-green:hover{background:rgba(72,187,120,0.40)}
+    .btn-h-teal{background:rgba(56,178,172,0.28);border-color:rgba(56,178,172,0.6)}
+    .btn-h-teal:hover{background:rgba(56,178,172,0.40)}
+
+    /* ── Integration Settings Modal ── */
+    .intg-modal{max-width:640px}
+    .intg-section{margin-bottom:20px;padding:16px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:12px}
+    .intg-section h3{font-size:0.88rem;font-weight:700;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+    .intg-status{font-size:0.75rem;font-weight:700;padding:3px 10px;border-radius:20px;margin-left:auto}
+    .intg-status.ok{background:#f0fff4;color:#276749}
+    .intg-status.ng{background:#fff5f5;color:#e53e3e}
+    .intg-status.connecting{background:#ebf4ff;color:#3b82f6}
+    .intg-row{display:flex;gap:8px;align-items:flex-end;margin-bottom:10px}
+    .intg-row .form-group{flex:1}
+    .btn-intg{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:9px;
+      padding:9px 16px;font-size:0.83rem;font-weight:600;cursor:pointer;font-family:inherit;
+      transition:transform 0.15s,box-shadow 0.15s;white-space:nowrap;align-self:flex-end}
+    .btn-intg:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+    .btn-intg:disabled{opacity:0.5;cursor:not-allowed;transform:none;box-shadow:none}
+    .btn-intg-red{background:linear-gradient(135deg,#fc8181,#e53e3e)}
+    .btn-intg-green{background:linear-gradient(135deg,#68d391,#276749)}
+    .btn-intg-blue{background:linear-gradient(135deg,#63b3ed,#3b82f6)}
+    .intg-note{font-size:0.73rem;color:#a0aec0;line-height:1.6;margin-top:6px}
+    .intg-log{font-size:0.75rem;color:#4a5568;background:#edf2f7;border-radius:8px;padding:8px 10px;
+      margin-top:10px;max-height:90px;overflow-y:auto;font-family:monospace;display:none}
+    .intg-log.show{display:block}
+
+    /* Chatwork task import list */
+    .cw-task-list{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;margin-top:10px}
+    .cw-task-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:white;
+      border:1.5px solid #e2e8f0;border-radius:9px;font-size:0.82rem}
+    .cw-task-item input{width:16px;height:16px;accent-color:#667eea;cursor:pointer;flex-shrink:0}
+    .cw-task-body{flex:1;min-width:0}
+    .cw-task-name{font-weight:600;color:#2d3748;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .cw-task-meta{font-size:0.7rem;color:#a0aec0;margin-top:1px}
+    .cw-import-actions{display:flex;gap:7px;margin-top:10px;flex-wrap:wrap}
+
+    /* Container */
+    .container{max-width:960px;margin:26px auto;padding:0 15px}
+
+    /* Card */
+    .card{background:white;border-radius:15px;padding:20px 22px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:18px}
+    .card h2{font-size:0.92rem;font-weight:700;color:#667eea;margin-bottom:13px;display:flex;align-items:center;gap:6px}
+
+    /* Form */
+    .form-row{display:flex;gap:9px;flex-wrap:wrap}
+    .form-group{display:flex;flex-direction:column;gap:5px}
+    .form-group label{font-size:0.72rem;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.5px}
+    .form-group.flex-1{flex:1;min-width:170px}
+    .form-group.w-auto{flex:0 0 auto}
+    input[type="text"],input[type="date"],input[type="number"],select{
+      border:2px solid #e2e8f0;border-radius:9px;padding:9px 11px;
+      font-size:0.9rem;font-family:inherit;color:#2d3748;
+      transition:border-color 0.2s,box-shadow 0.2s;background:#f7fafc}
+    input[type="text"]:focus,input[type="date"]:focus,input[type="number"]:focus,select:focus{
+      outline:none;border-color:#667eea;box-shadow:0 0 0 3px rgba(102,126,234,0.15);background:white}
+    input[type="text"]{width:100%}
+
+    .btn-add{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;
+      border-radius:9px;padding:9px 20px;font-size:0.9rem;font-weight:600;cursor:pointer;
+      transition:transform 0.15s,box-shadow 0.15s;align-self:flex-end;white-space:nowrap}
+    .btn-add:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+
+    /* Stats */
+    .stats{display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap}
+    .stat-card{background:white;border-radius:11px;padding:13px 17px;flex:1;min-width:105px;
+      box-shadow:0 2px 8px rgba(0,0,0,0.06);text-align:center}
+    .stat-card .stat-num{font-size:1.85rem;font-weight:800;color:#667eea;line-height:1}
+    .stat-card .stat-label{font-size:0.72rem;color:#a0aec0;margin-top:3px;font-weight:600}
+    .stat-card.clickable{cursor:pointer}
+    .stat-card.clickable:hover{box-shadow:0 4px 14px rgba(0,0,0,0.11)}
+
+    /* ── Tax Calendar Panel ── */
+    .tax-panel{background:white;border-radius:15px;box-shadow:0 2px 12px rgba(0,0,0,0.07);margin-bottom:18px;overflow:hidden}
+    .tax-panel-hdr{display:flex;align-items:center;gap:9px;padding:13px 20px;cursor:pointer;user-select:none;transition:background 0.2s}
+    .tax-panel-hdr:hover{background:#fafafa}
+    .tax-panel-hdr.open{border-bottom:2px solid #e2e8f0}
+    .tax-panel-title{font-size:0.95rem;font-weight:700;color:#2d3748;flex:1}
+    .tax-subtitle{font-size:0.75rem;color:#a0aec0;font-weight:600}
+    .tax-arrow{font-size:0.8rem;color:#a0aec0;transition:transform 0.25s;display:inline-block;margin-left:4px}
+    .tax-win-btn{background:white;border:2px solid #e2e8f0;border-radius:20px;padding:3px 10px;
+      font-size:0.74rem;font-weight:700;cursor:pointer;color:#718096;transition:all 0.2s;user-select:none;font-family:inherit}
+    .tax-win-btn:hover,.tax-win-btn.active{border-color:#48bb78;color:#276749;background:#f0fff4}
+    .tax-panel-body{padding:14px 18px;display:none}
+    .tax-panel-body.open{display:block}
+    .tax-event-row{display:flex;flex-direction:column;gap:4px;
+      padding:8px 12px;border-radius:10px;margin-bottom:5px;border-left:4px solid #68d391;background:#f7fafc}
+    .tax-event-row.te-ov{border-left-color:#fc8181;background:#fff5f5}
+    .tax-event-row.te-so{border-left-color:#f6ad55;background:#fffaf0}
+    .te-ev-name{font-size:0.83rem;font-weight:600;color:#2d3748;line-height:1.4;word-break:break-all}
+    .te-note-small{font-size:0.7rem;color:#a0aec0;margin-top:1px}
+    .te-row-bottom{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:2px}
+    .te-date{font-size:0.76rem;font-weight:700;color:#4a5568;white-space:nowrap}
+    .te-date.ov{color:#e53e3e}
+    .te-date.so{color:#dd6b20}
+    .te-clients{display:flex;gap:4px;flex-wrap:wrap;margin-left:auto}
+    .te-client-badge{font-size:0.67rem;font-weight:700;padding:2px 7px;border-radius:10px;background:#e9d8fd;color:#6b46c1;white-space:nowrap}
+    .tax-empty{text-align:center;padding:20px;color:#a0aec0;font-size:0.84rem}
+
+    /* ── Tax Settings Modal ── */
+    .tax-modal{max-width:610px}
+    .modal-tabs{display:flex;margin-bottom:16px;border-bottom:2px solid #e2e8f0}
+    .modal-tab-btn{flex:1;padding:10px 8px;border:none;background:none;font-size:0.84rem;font-weight:700;
+      color:#a0aec0;cursor:pointer;font-family:inherit;border-bottom:3px solid transparent;margin-bottom:-2px;transition:all 0.2s}
+    .modal-tab-btn.active{color:#667eea;border-bottom-color:#667eea}
+    .tax-ev-list{display:flex;flex-direction:column;gap:6px;max-height:230px;overflow-y:auto;margin-bottom:13px}
+    .tax-ev-item{display:flex;align-items:center;gap:8px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:9px 12px}
+    .tax-ev-info{flex:1;min-width:0}
+    .tax-ev-item-name{font-size:0.84rem;font-weight:700;color:#2d3748}
+    .tax-ev-item-meta{font-size:0.71rem;color:#9f7aea;margin-top:2px}
+    .tax-ev-item button{background:none;border:none;cursor:pointer;color:#cbd5e0;font-size:0.88rem;
+      padding:3px 5px;border-radius:5px;transition:color 0.2s,background 0.2s}
+    .tax-ev-item button:hover{color:#e53e3e;background:#fff5f5}
+    .tax-add-box{background:#f0f4ff;border:1.5px solid #c3dafe;border-radius:12px;padding:15px;margin-bottom:13px}
+    .tax-add-box h3{font-size:0.82rem;font-weight:700;color:#667eea;margin-bottom:11px}
+    .client-sel-wrap{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:13px}
+    .client-sel-btn{padding:5px 11px;border-radius:20px;border:2px solid #e2e8f0;background:white;cursor:pointer;
+      font-size:0.78rem;font-weight:700;color:#718096;font-family:inherit;transition:all 0.2s}
+    .client-sel-btn.active{border-color:#667eea;color:#667eea;background:#ebf4ff}
+    .client-chk-list{display:flex;flex-direction:column;gap:6px;max-height:300px;overflow-y:auto}
+    .client-chk-item{display:flex;align-items:center;gap:8px;padding:8px 12px;background:#f7fafc;border-radius:9px;cursor:pointer;transition:background 0.15s}
+    .client-chk-item:hover{background:#ebf4ff}
+    .client-chk-item input{width:16px;height:16px;accent-color:#667eea;cursor:pointer;flex-shrink:0}
+    .client-chk-item .chk-label{font-size:0.84rem;font-weight:600;color:#2d3748;cursor:pointer;flex:1}
+    .client-chk-item .chk-meta{font-size:0.71rem;color:#a0aec0}
+    .no-clients-msg{text-align:center;padding:20px;color:#a0aec0;font-size:0.84rem;line-height:1.6}
+
+    /* Date range */
+    .date-range-bar{display:flex;align-items:center;gap:7px;margin-bottom:13px;flex-wrap:wrap}
+    .date-range-bar .dr-label{font-size:0.76rem;font-weight:700;color:#718096}
+    .dr-btn{background:white;border:2px solid #e2e8f0;border-radius:20px;padding:4px 14px;
+      font-size:0.8rem;font-weight:700;cursor:pointer;color:#718096;transition:all 0.2s;font-family:inherit}
+    .dr-btn:hover,.dr-btn.active{border-color:#667eea;color:#667eea;background:#ebf4ff}
+    .no-due-toggle{margin-left:auto;display:flex;align-items:center;gap:5px;font-size:0.78rem;color:#718096;cursor:pointer}
+    .no-due-toggle input{cursor:pointer;accent-color:#667eea;width:14px;height:14px}
+
+    /* Category Tabs */
+    .cat-tabs-wrap{background:white;border-radius:13px;box-shadow:0 2px 8px rgba(0,0,0,0.07);margin-bottom:13px;overflow:hidden}
+    .cat-tabs{display:flex;overflow-x:auto;scrollbar-width:none}
+    .cat-tabs::-webkit-scrollbar{display:none}
+    .cat-tab{flex:0 0 auto;padding:13px 14px;border:none;background:white;cursor:pointer;
+      font-size:0.81rem;font-weight:700;color:#a0aec0;transition:all 0.2s;
+      border-bottom:3px solid transparent;white-space:nowrap;font-family:inherit}
+    .cat-tab:hover{background:#f7fafc;color:#667eea}
+    .cat-tab.active{color:#667eea;border-bottom-color:#667eea;background:#f0f4ff}
+    .cat-tab .cat-count{display:inline-block;background:#e2e8f0;color:#718096;
+      border-radius:10px;font-size:0.68rem;padding:1px 6px;margin-left:3px;font-weight:700}
+    .cat-tab.active .cat-count{background:#667eea;color:white}
+
+    /* Subcat filter */
+    .subcat-filter-bar{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:13px;min-height:26px;align-items:center}
+    .sub-label{font-size:0.73rem;color:#a0aec0;font-weight:600}
+    .subcat-btn{background:white;border:2px solid #e2e8f0;border-radius:20px;padding:3px 12px;
+      font-size:0.78rem;font-weight:600;cursor:pointer;color:#718096;transition:all 0.2s;font-family:inherit}
+    .subcat-btn:hover,.subcat-btn.active{border-color:#667eea;color:#667eea;background:#ebf4ff}
+
+    /* Status filters */
+    .controls{display:flex;gap:9px;margin-bottom:17px;flex-wrap:wrap;align-items:center}
+    .filter-group{display:flex;gap:6px;flex-wrap:wrap}
+    .filter-btn{background:white;border:2px solid #e2e8f0;border-radius:20px;padding:5px 14px;
+      font-size:0.8rem;font-weight:600;cursor:pointer;color:#718096;transition:all 0.2s}
+    .filter-btn.active,.filter-btn:hover{border-color:#667eea;color:#667eea;background:#ebf4ff}
+    .search-box{margin-left:auto;position:relative}
+    .search-box input{padding-left:32px;width:185px}
+    .search-box::before{content:"🔍";position:absolute;left:9px;top:50%;transform:translateY(-50%);font-size:0.8rem}
+
+    /* Task items */
+    .task-list{display:flex;flex-direction:column;gap:8px}
+    .task-item{background:white;border-radius:12px;padding:13px 17px;box-shadow:0 2px 8px rgba(0,0,0,0.06);
+      display:flex;align-items:center;gap:11px;transition:transform 0.15s,box-shadow 0.15s;
+      border-left:4px solid transparent;animation:slideIn 0.25s ease}
+    @keyframes slideIn{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+    .task-item:hover{transform:translateY(-2px);box-shadow:0 5px 15px rgba(0,0,0,0.1)}
+    .task-item.priority-high{border-left-color:#fc8181}
+    .task-item.priority-medium{border-left-color:#f6ad55}
+    .task-item.priority-low{border-left-color:#68d391}
+    .task-item.completed{opacity:0.52}
+    .task-item.completed .task-name{text-decoration:line-through;color:#a0aec0}
+    .task-item.is-recurring{background:linear-gradient(to right,#fefefe,#f8f6ff)}
+
+    .task-check{width:20px;height:20px;border-radius:50%;border:2.5px solid #cbd5e0;cursor:pointer;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.2s;
+      background:white;font-size:0.72rem}
+    .task-check:hover{border-color:#667eea;background:#ebf4ff}
+    .task-item.completed .task-check{background:#667eea;border-color:#667eea;color:white}
+
+    .task-body{flex:1;min-width:0}
+    .task-name{font-size:0.92rem;font-weight:600;color:#2d3748;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+    .task-name:hover{color:#667eea}
+    .task-name.expanded{white-space:normal;overflow:visible;text-overflow:unset}
+    .task-meta{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap;align-items:center}
+
+    .badge{font-size:0.67rem;font-weight:700;padding:2px 8px;border-radius:20px}
+    .badge-priority-high{background:#fff5f5;color:#e53e3e}
+    .badge-priority-medium{background:#fffaf0;color:#dd6b20}
+    .badge-priority-low{background:#f0fff4;color:#276749}
+    .badge-subcat{background:#f0f0f0;color:#4a5568}
+    .badge-rec{background:#ede9fe;color:#7c3aed}
+
+    .task-date{font-size:0.73rem;color:#a0aec0;display:flex;align-items:center;gap:3px}
+    .task-date.overdue{color:#e53e3e;font-weight:700}
+    .task-date.due-soon{color:#dd6b20;font-weight:700}
+
+    .btn-edit,.btn-delete{background:none;border:none;cursor:pointer;font-size:0.92rem;
+      color:#cbd5e0;padding:3px;border-radius:5px;transition:color 0.2s,background 0.2s;flex-shrink:0}
+    .btn-edit:hover{color:#667eea;background:#ebf4ff}
+    .btn-delete:hover{color:#e53e3e;background:#fff5f5}
+
+    /* Section headers */
+    .category-section{margin-bottom:24px}
+    .category-section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:7px;border-bottom:2px solid #e2e8f0}
+    .category-section-header h3{font-size:0.94rem;font-weight:700;color:#4a5568}
+    .subcat-section{margin-bottom:13px}
+    .subcat-section-header{font-size:0.77rem;font-weight:700;color:#718096;margin-bottom:6px;padding-left:4px;display:flex;align-items:center;gap:5px}
+    .subcat-section-header::before{content:'';display:inline-block;width:3px;height:12px;background:#cbd5e0;border-radius:2px}
+    .rec-section-header{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:7px;border-bottom:2px dashed #d6bcfa}
+    .rec-section-header h3{font-size:0.94rem;font-weight:700;color:#7c3aed}
+
+    .empty-state{text-align:center;padding:50px 20px;color:#a0aec0}
+    .empty-state .emoji{font-size:2.6rem;margin-bottom:9px}
+
+    /* ── Modals ── */
+    .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center}
+    .modal-overlay.open{display:flex}
+    .modal{background:white;border-radius:16px;padding:24px;width:100%;max-width:540px;margin:13px;
+      box-shadow:0 20px 60px rgba(0,0,0,0.2);animation:modalIn 0.2s ease;max-height:92vh;overflow-y:auto}
+    @keyframes modalIn{from{opacity:0;transform:scale(0.95) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+    .modal h2{font-size:1rem;font-weight:700;color:#667eea;margin-bottom:16px}
+    .modal .form-group{margin-bottom:12px}
+    .modal .form-group label{display:block;font-size:0.72rem;font-weight:700;color:#718096;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:5px}
+    .modal input[type="text"],.modal input[type="date"],.modal input[type="number"],.modal select{width:100%}
+    .modal-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:17px}
+    .btn-cancel{background:#f7fafc;border:2px solid #e2e8f0;border-radius:9px;padding:8px 17px;
+      font-size:0.87rem;font-weight:600;cursor:pointer;color:#718096;font-family:inherit;transition:background 0.2s}
+    .btn-cancel:hover{background:#edf2f7}
+    .btn-save{background:linear-gradient(135deg,#667eea,#764ba2);color:white;border:none;border-radius:9px;
+      padding:8px 20px;font-size:0.87rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform 0.15s,box-shadow 0.15s}
+    .btn-save:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(102,126,234,0.4)}
+    .btn-save-purple{background:linear-gradient(135deg,#9f7aea,#7c3aed);color:white;border:none;border-radius:9px;
+      padding:8px 20px;font-size:0.87rem;font-weight:600;cursor:pointer;font-family:inherit;transition:transform 0.15s,box-shadow 0.15s}
+    .btn-save-purple:hover{transform:translateY(-1px);box-shadow:0 4px 12px rgba(124,58,237,0.4)}
+
+    /* Category manager */
+    .cat-manage-modal{max-width:580px}
+    .cat-list{display:flex;flex-direction:column;gap:7px;margin-bottom:18px}
+    .cat-list-item{background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:11px;padding:11px 14px;
+      display:flex;align-items:center;gap:10px}
+    .cat-list-item .cat-preview{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;
+      justify-content:center;font-size:1.1rem;flex-shrink:0}
+    .cat-list-item .cat-info{flex:1;min-width:0}
+    .cat-list-item .cat-name-text{font-size:0.9rem;font-weight:700;color:#2d3748}
+    .cat-list-item .cat-sub-count{font-size:0.73rem;color:#a0aec0;margin-top:2px}
+    .cat-list-item .cat-actions{display:flex;gap:4px}
+    .cat-list-item .cat-actions button{background:none;border:none;cursor:pointer;color:#cbd5e0;
+      font-size:0.88rem;padding:4px 6px;border-radius:6px;transition:color 0.2s,background 0.2s;font-family:inherit}
+    .cat-list-item .cat-actions .btn-cat-edit:hover{color:#667eea;background:#ebf4ff}
+    .cat-list-item .cat-actions .btn-cat-del:hover{color:#e53e3e;background:#fff5f5}
+
+    .cat-add-form{background:#f0f4ff;border:1.5px solid #c3dafe;border-radius:12px;padding:16px;margin-bottom:14px}
+    .cat-add-form h3{font-size:0.83rem;font-weight:700;color:#667eea;margin-bottom:12px}
+
+    /* Emoji picker */
+    .emoji-picker{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+    .emoji-opt{width:34px;height:34px;border:2px solid #e2e8f0;border-radius:8px;background:white;
+      cursor:pointer;font-size:1.1rem;display:flex;align-items:center;justify-content:center;
+      transition:all 0.15s}
+    .emoji-opt:hover{border-color:#667eea;background:#ebf4ff}
+    .emoji-opt.selected{border-color:#667eea;background:#ebf4ff}
+
+    /* Color picker */
+    .color-picker{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+    .color-opt{width:28px;height:28px;border-radius:50%;cursor:pointer;border:3px solid transparent;
+      transition:all 0.15px;flex-shrink:0}
+    .color-opt:hover{transform:scale(1.15)}
+    .color-opt.selected{border-color:#2d3748;transform:scale(1.1)}
+
+    /* Subcat manager */
+    .subcat-manage-modal{max-width:480px}
+    .cat-selector{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:14px;margin-top:9px}
+    .cat-select-btn{padding:5px 11px;border-radius:20px;border:2px solid #e2e8f0;background:white;
+      cursor:pointer;font-size:0.78rem;font-weight:700;color:#718096;font-family:inherit;transition:all 0.2s}
+    .cat-select-btn.active{border-color:#667eea;color:#667eea;background:#ebf4ff}
+    .subcat-list{display:flex;flex-direction:column;gap:6px;margin-bottom:13px;min-height:34px}
+    .subcat-list-item{display:flex;align-items:center;justify-content:space-between;background:#f7fafc;
+      border-radius:9px;padding:9px 12px;font-size:0.87rem;font-weight:600;color:#2d3748}
+    .subcat-list-item button{background:none;border:none;cursor:pointer;color:#cbd5e0;font-size:0.9rem;
+      padding:2px 5px;border-radius:5px;transition:color 0.2s,background 0.2s}
+    .subcat-list-item button:hover{color:#e53e3e;background:#fff5f5}
+    .subcat-add-row{display:flex;gap:7px}
+    .subcat-add-row input{flex:1}
+    .btn-subcat-add{background:#667eea;color:white;border:none;border-radius:9px;padding:9px 15px;
+      font-size:0.87rem;font-weight:600;cursor:pointer;font-family:inherit;white-space:nowrap;transition:background 0.2s}
+    .btn-subcat-add:hover{background:#5a67d8}
+    .empty-subcat,.empty-rec{font-size:0.81rem;color:#a0aec0;text-align:center;padding:9px 0}
+
+    /* Recurring manager */
+    .rec-modal{max-width:570px}
+    .rec-list{display:flex;flex-direction:column;gap:7px;margin-bottom:16px}
+    .rec-list-item{background:#f9f8ff;border:1.5px solid #e9d8fd;border-radius:11px;padding:11px 14px;display:flex;align-items:center;gap:9px}
+    .rec-list-item .rec-info{flex:1;min-width:0}
+    .rec-list-item .rec-name{font-size:0.87rem;font-weight:700;color:#2d3748}
+    .rec-list-item .rec-meta{font-size:0.73rem;color:#9f7aea;margin-top:2px}
+    .rec-list-item button{background:none;border:none;cursor:pointer;color:#cbd5e0;font-size:0.9rem;padding:3px;border-radius:5px;transition:color 0.2s,background 0.2s}
+    .rec-list-item button:hover{color:#e53e3e;background:#fff5f5}
+    .rec-form-card{background:#f9f8ff;border:1.5px solid #e9d8fd;border-radius:12px;padding:15px;margin-bottom:15px}
+    .rec-form-card h3{font-size:0.82rem;font-weight:700;color:#7c3aed;margin-bottom:11px}
+
+    /* ── Wide screen split layout ── */
+    .layout-split{display:flex;gap:18px;align-items:flex-start}
+    .main-col{flex:1;min-width:0}
+    .side-col{width:380px;flex-shrink:0}
+
+    @media(min-width:1100px){
+      .container{max-width:min(97vw,1180px)}
+      .side-col{position:sticky;top:16px;max-height:calc(100vh - 40px);overflow-y:auto;scrollbar-width:thin;scrollbar-color:#e2e8f0 transparent}
+      .side-col::-webkit-scrollbar{width:5px}
+      .side-col::-webkit-scrollbar-thumb{background:#e2e8f0;border-radius:3px}
+      .side-col .tax-panel{margin-bottom:0}
+      .side-col .tax-win-btn{padding:2px 6px;font-size:0.69rem}
+    }
+    @media(max-width:1099px){
+      .layout-split{flex-direction:column}
+      .side-col{width:100%;order:-1}
+    }
+    @media(max-width:600px){
+      header{padding:13px 14px}
+      .container{margin:13px auto}
+      .cat-tab{font-size:0.73rem;padding:11px 8px}
+      .te-clients{justify-content:flex-start}
+    }
+
+    /* ── クライアントバッジ折りたたみ ── */
+    .te-badge-more{font-size:0.67rem;font-weight:700;padding:2px 7px;border-radius:10px;
+      background:#e2e8f0;color:#4a5568;cursor:pointer;border:none;font-family:inherit;
+      transition:background 0.15s;white-space:nowrap}
+    .te-badge-more:hover{background:#cbd5e0}
+    .te-clients-rest{display:none;gap:4px;flex-wrap:wrap}
+
+    /* ══════ v3 業務タイマー ══════ */
+    .btn-h-orange{background:rgba(251,146,60,0.32);border-color:rgba(251,146,60,0.65)}
+    .btn-h-orange:hover{background:rgba(251,146,60,0.45)}
+
+    .timer-card{border-left:5px solid #fb923c}
+    .timer-card.is-running{
+      background:linear-gradient(135deg,#fff7ed 0%,#fef3c7 100%);
+      box-shadow:0 4px 16px rgba(251,146,60,0.25);
+      animation:timerPulse 2.5s ease-in-out infinite;
+    }
+    @keyframes timerPulse{
+      0%,100%{box-shadow:0 4px 16px rgba(251,146,60,0.25)}
+      50%    {box-shadow:0 4px 24px rgba(251,146,60,0.45)}
+    }
+
+    /* 計測中表示 */
+    .timer-running{display:flex;flex-direction:column;gap:10px;padding:14px 16px;
+      background:white;border-radius:12px;border:2px solid #fb923c;margin-bottom:14px}
+    .timer-running-top{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+    .timer-elapsed{font-size:2.4rem;font-weight:800;color:#c2410c;
+      font-variant-numeric:tabular-nums;letter-spacing:1px;line-height:1}
+    .timer-target{flex:1;min-width:180px}
+    .timer-target-name{font-size:1rem;font-weight:700;color:#2d3748;line-height:1.3}
+    .timer-target-meta{font-size:0.78rem;color:#718096;margin-top:3px}
+    .btn-timer-stop{background:linear-gradient(135deg,#fb923c,#ea580c);color:white;
+      border:none;border-radius:11px;padding:11px 20px;font-size:0.95rem;font-weight:700;
+      cursor:pointer;font-family:inherit;white-space:nowrap;
+      transition:transform 0.15s,box-shadow 0.15s}
+    .btn-timer-stop:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(234,88,12,0.5)}
+    .timer-running-memo{display:flex;gap:8px;align-items:center}
+    .timer-running-memo input{flex:1}
+
+    /* 開始フォーム */
+    .timer-start-form{display:flex;flex-direction:column;gap:10px;padding:6px 0}
+    .timer-start-row{display:flex;gap:9px;flex-wrap:wrap;align-items:flex-end}
+    .btn-timer-start{background:linear-gradient(135deg,#fb923c,#ea580c);color:white;
+      border:none;border-radius:11px;padding:11px 24px;font-size:1rem;font-weight:700;
+      cursor:pointer;font-family:inherit;white-space:nowrap;align-self:flex-end;
+      transition:transform 0.15s,box-shadow 0.15s}
+    .btn-timer-start:hover{transform:translateY(-1px);box-shadow:0 4px 14px rgba(234,88,12,0.5)}
+    .timer-hint{font-size:0.75rem;color:#a0aec0;margin-top:4px}
+
+    /* 期間タブ */
+    .timer-history-bar{display:flex;gap:8px;align-items:center;margin:14px 0 10px;flex-wrap:wrap}
+    .timer-tabs{display:flex;gap:4px;background:#f7fafc;border-radius:10px;padding:3px}
+    .timer-tab{background:transparent;border:none;padding:6px 14px;font-size:0.78rem;
+      font-weight:700;color:#718096;border-radius:8px;cursor:pointer;font-family:inherit;
+      transition:background 0.15s,color 0.15s}
+    .timer-tab.active{background:white;color:#c2410c;box-shadow:0 1px 4px rgba(0,0,0,0.1)}
+    .btn-timer-csv{margin-left:auto;background:#f0fff4;border:1.5px solid #68d391;
+      color:#276749;border-radius:9px;padding:6px 12px;font-size:0.76rem;font-weight:700;
+      cursor:pointer;font-family:inherit;white-space:nowrap}
+    .btn-timer-csv:hover{background:#c6f6d5}
+
+    /* 集計サマリ */
+    .timer-summary{display:flex;flex-direction:column;gap:6px;margin-bottom:10px}
+    .timer-summary-item{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+      background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:10px;
+      padding:9px 13px;font-size:0.83rem;cursor:pointer;transition:background 0.15s,border-color 0.15s}
+    .timer-summary-item:hover{background:#edf2f7;border-color:#cbd5e0}
+    .timer-summary-item.is-filtered{background:#fff7ed;border-color:#fb923c}
+    .timer-summary-item .ts-cat{font-weight:700;color:#2d3748}
+    .timer-summary-item .ts-sub{font-weight:700;color:#2d3748;flex:1;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .timer-summary-item .ts-cat-tag{font-size:0.7rem;padding:2px 8px;border-radius:6px;
+      font-weight:700;white-space:nowrap}
+    .timer-summary-item .ts-time{font-weight:800;color:#c2410c;margin-left:auto;
+      font-variant-numeric:tabular-nums;white-space:nowrap}
+    .timer-summary-total{background:linear-gradient(135deg,#fff7ed,#fef3c7);
+      border-color:#fb923c;font-weight:700;cursor:default}
+    .timer-summary-total:hover{background:linear-gradient(135deg,#fff7ed,#fef3c7);border-color:#fb923c}
+
+    /* カテゴリ小計チップ（補助情報） */
+    .timer-cat-chips{display:flex;align-items:center;flex-wrap:wrap;gap:5px;
+      margin-top:6px;padding:7px 10px;background:#fafafa;border-radius:9px;
+      font-size:0.73rem}
+    .timer-cat-chips-label{color:#a0aec0;font-weight:700;margin-right:4px}
+    .timer-cat-chip{padding:3px 9px;border-radius:6px;font-weight:600;white-space:nowrap}
+    .timer-cat-chip b{font-variant-numeric:tabular-nums;margin-left:3px}
+
+    /* 履歴フィルター */
+    .timer-history-filter{display:flex;align-items:center;gap:8px;padding:7px 11px;
+      background:#fff7ed;border:1.5px solid #fb923c;border-radius:9px;font-size:0.78rem;
+      font-weight:700;color:#c2410c;margin-bottom:6px}
+    .timer-history-empty{padding:14px;text-align:center;color:#a0aec0;font-size:0.82rem}
+    .btn-clear-filter{background:white;border:1.5px solid #fb923c;color:#c2410c;
+      border-radius:7px;padding:3px 10px;font-size:0.72rem;font-weight:700;cursor:pointer;
+      font-family:inherit;margin-left:auto}
+    .btn-clear-filter:hover{background:#fff7ed}
+
+    /* 履歴アイテムのサブカテゴリタグ */
+    .te-sub{font-size:0.7rem;padding:2px 7px;border-radius:6px;background:#f0fff4;
+      color:#276749;font-weight:700;white-space:nowrap}
+
+    /* 履歴リスト */
+    .timer-history{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;
+      border-top:1px solid #e2e8f0;padding-top:10px;margin-top:6px}
+    .timer-entry{display:flex;align-items:center;gap:10px;padding:8px 11px;background:#f7fafc;
+      border:1px solid #e2e8f0;border-radius:9px;font-size:0.8rem}
+    .te-date{font-size:0.7rem;color:#a0aec0;font-weight:700;min-width:90px;
+      font-variant-numeric:tabular-nums}
+    .te-name{flex:1;color:#2d3748;font-weight:600;min-width:0;
+      overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+    .te-cat{font-size:0.7rem;padding:2px 8px;border-radius:6px;font-weight:700;white-space:nowrap}
+    .te-dur{font-weight:800;color:#c2410c;font-variant-numeric:tabular-nums;min-width:60px;text-align:right}
+    .te-actions{display:flex;gap:3px}
+    .te-actions button{background:transparent;border:none;font-size:0.85rem;cursor:pointer;
+      padding:2px 5px;border-radius:6px;opacity:0.6;transition:opacity 0.15s,background 0.15s}
+    .te-actions button:hover{opacity:1;background:#e2e8f0}
+
+    /* タスクカードのタイマーボタン */
+    .btn-task-timer{background:linear-gradient(135deg,#fed7aa,#fb923c);color:white;
+      border:none;border-radius:8px;padding:6px 10px;font-size:0.78rem;font-weight:700;
+      cursor:pointer;font-family:inherit;margin-right:4px;
+      transition:transform 0.15s,box-shadow 0.15s;white-space:nowrap}
+    .btn-task-timer:hover{transform:translateY(-1px);box-shadow:0 3px 8px rgba(234,88,12,0.4)}
+    .btn-task-timer.is-active{background:linear-gradient(135deg,#fb923c,#ea580c);
+      box-shadow:0 0 0 3px rgba(234,88,12,0.25);animation:timerPulse 2s ease-in-out infinite}
+
+    /* タスクの累計時間バッジ */
+    .badge-time{background:#fff7ed;color:#c2410c;font-weight:700;
+      font-variant-numeric:tabular-nums}
+
+    /* ヘッダー同期ステータスバッジ */
+    .header-sync-badge{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;
+      border-radius:9px;font-size:0.78rem;font-weight:700;cursor:pointer;
+      border:1.5px solid rgba(255,255,255,0.4);transition:all 0.2s;white-space:nowrap}
+    .header-sync-badge:hover{background:rgba(255,255,255,0.15)}
+    .header-sync-badge.status-ok{background:rgba(72,187,120,0.3);border-color:rgba(72,187,120,0.7);color:white}
+    .header-sync-badge.status-syncing{background:rgba(99,179,237,0.3);border-color:rgba(99,179,237,0.7);color:white;
+      animation:syncPulse 1.5s ease-in-out infinite}
+    @keyframes syncPulse{0%,100%{opacity:1}50%{opacity:0.6}}
+    .header-sync-badge.status-error{background:rgba(252,129,129,0.4);border-color:rgba(252,129,129,0.8);color:white}
+    .header-sync-badge.status-unauth{background:rgba(251,146,60,0.35);border-color:rgba(251,146,60,0.7);color:white}
+    .header-sync-badge.status-noconfig{background:rgba(160,174,192,0.3);border-color:rgba(160,174,192,0.6);color:rgba(255,255,255,0.85)}
+    .header-sync-badge.status-idle{background:rgba(160,174,192,0.25);border-color:rgba(160,174,192,0.5);color:rgba(255,255,255,0.85)}
+
+    /* 連携設定モーダル：Drive同期セクション */
+    .intg-section.drive-section{border-color:#90cdf4;background:#ebf8ff}
+    .intg-toggle-row{display:flex;align-items:center;gap:10px;margin-top:8px}
+    .intg-toggle{display:inline-flex;align-items:center;gap:7px;cursor:pointer;font-size:0.85rem}
+    .intg-toggle input{width:18px;height:18px;cursor:pointer;accent-color:#3b82f6}
+    .intg-toggle-label{font-weight:700;color:#2c5282}
+    .intg-status-info{font-size:0.75rem;color:#4a5568;background:white;padding:8px 11px;
+      border-radius:8px;border:1px solid #cbd5e0;margin-top:8px;line-height:1.6}
+    .intg-status-info code{background:#edf2f7;padding:1px 5px;border-radius:4px;font-size:0.8em}
+
+    /* ヘッダー計測中バッジ（PWA時に常時表示） */
+    .header-timer-badge{display:none;background:rgba(251,146,60,0.3);border:1.5px solid rgba(251,146,60,0.7);
+      color:white;border-radius:9px;padding:6px 10px;font-size:0.8rem;font-weight:700;
+      font-variant-numeric:tabular-nums;cursor:pointer}
+    .header-timer-badge.show{display:inline-flex;align-items:center;gap:6px}
+    .header-timer-badge .htb-dot{width:7px;height:7px;border-radius:50%;background:#fb923c;
+      animation:timerPulse 1s ease-in-out infinite}
+
+    /* iPhone（狭い画面）対応 */
+    @media (max-width:600px){
+      .timer-elapsed{font-size:2rem}
+      .btn-timer-stop,.btn-timer-start{padding:14px 20px;font-size:1.05rem;width:100%}
+      .timer-running-top{flex-direction:column;align-items:stretch}
+      .timer-target{min-width:0}
+      .timer-tabs{flex:1}
+      .timer-tab{flex:1;padding:7px 8px}
+      .te-date{min-width:70px;font-size:0.65rem}
+      .te-name{font-size:0.78rem}
+      .header-btns{font-size:0.74rem}
+    }
+    /* PWA起動時のセーフエリア */
+    @supports (padding:max(0px)){
+      header{padding-top:max(18px,env(safe-area-inset-top));}
+      body{padding-bottom:env(safe-area-inset-bottom)}
+    }
+
+    /* ══════ 工数レポート Modal ══════ */
+    .report-modal{max-width:1100px;width:96vw;max-height:92vh;overflow-y:auto}
+    .report-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px}
+    .report-toolbar{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+    .report-toolbar label{font-size:0.83rem;font-weight:700;color:#4a5568;display:flex;align-items:center;gap:6px}
+    .report-toolbar select{padding:7px 10px;font-size:0.85rem}
+
+    .report-section{margin-bottom:22px;padding:14px;background:#f7fafc;border:1.5px solid #e2e8f0;border-radius:12px}
+    .report-section h3{font-size:0.95rem;font-weight:700;margin-bottom:12px;color:#2d3748;display:flex;align-items:center;gap:6px}
+
+    .report-table-wrap{overflow-x:auto;border-radius:9px;background:white;border:1px solid #e2e8f0}
+    .report-table{width:100%;border-collapse:collapse;font-size:0.78rem;min-width:780px}
+    .report-table th,.report-table td{padding:8px 10px;text-align:right;border-bottom:1px solid #edf2f7;
+      font-variant-numeric:tabular-nums;white-space:nowrap}
+    .report-table th{background:#edf2f7;font-weight:700;color:#4a5568;text-transform:uppercase;
+      font-size:0.7rem;letter-spacing:0.5px;position:sticky;top:0;z-index:1}
+    .report-table th.col-name,.report-table td.col-name{text-align:left;font-weight:700;color:#2d3748;
+      position:sticky;left:0;background:white;z-index:2;min-width:160px}
+    .report-table tr:hover td{background:#f7fafc}
+    .report-table tr:hover td.col-name{background:#f0f4f8}
+    .report-table .row-total td{background:#fff7ed!important;color:#c2410c;font-weight:800;border-top:2px solid #fb923c}
+    .report-table .row-total td.col-name{background:#fff7ed!important}
+    .report-table .num-zero{color:#cbd5e0}
+    .report-table .num-rate-good{color:#276749;font-weight:700}
+    .report-table .num-rate-mid{color:#c05621;font-weight:700}
+    .report-table .num-rate-low{color:#e53e3e;font-weight:700}
+    .report-table .num-rate-na{color:#a0aec0}
+    .report-table .col-cat-tag{padding:2px 7px;border-radius:5px;font-size:0.66rem;font-weight:700;display:inline-block;margin-left:6px}
+    .report-table .col-sep{border-left:2px solid #cbd5e0}
+
+    .report-overall{display:flex;flex-direction:column;gap:10px;padding:16px;background:linear-gradient(135deg,#fff7ed 0%,#fef3c7 100%);
+      border:2px solid #fb923c;border-radius:12px}
+    .report-overall-row{display:flex;justify-content:space-between;align-items:center;font-size:0.92rem;flex-wrap:wrap;gap:6px}
+    .report-overall-label{color:#7c2d12;font-weight:700}
+    .report-overall-value{color:#c2410c;font-weight:800;font-size:1.1rem;font-variant-numeric:tabular-nums}
+    .report-overall-rate{font-size:1.55rem;text-align:center;padding:10px;background:white;border-radius:10px;
+      color:#c2410c;font-weight:800;font-variant-numeric:tabular-nums}
+
+    .report-monthly-bar{display:flex;align-items:flex-end;gap:3px;height:60px;padding:8px 4px 0;background:white;border-radius:8px;border:1px solid #e2e8f0}
+    .report-monthly-bar .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:0}
+    .report-monthly-bar .bar-fill{width:100%;background:linear-gradient(to top,#fb923c,#fdba74);border-radius:3px 3px 0 0;min-height:1px}
+    .report-monthly-bar .bar-label{font-size:0.6rem;color:#a0aec0;font-weight:700}
+
+    .report-empty{padding:30px;text-align:center;color:#a0aec0;font-size:0.9rem}
+
+    /* ══════ 月額設定 Modal ══════ */
+    .rate-modal{max-width:560px;max-height:90vh;overflow-y:auto}
+    .rate-note{font-size:0.78rem;color:#718096;background:#edf2f7;padding:8px 11px;border-radius:8px;
+      margin-bottom:14px;line-height:1.5}
+    .rate-cat-section{margin-bottom:18px}
+    .rate-cat-header{font-size:0.92rem;font-weight:700;color:#2d3748;padding:8px 0;border-bottom:2px solid;margin-bottom:8px;display:flex;align-items:center;gap:6px}
+    .rate-row{display:flex;align-items:center;gap:10px;padding:8px 4px;font-size:0.85rem;border-bottom:1px dashed #edf2f7;flex-wrap:wrap}
+    .rate-row:last-child{border-bottom:none}
+    .rate-row-label{min-width:120px;color:#2d3748;font-weight:600}
+    .rate-row-fields{display:flex;flex-wrap:wrap;gap:10px;flex:1;align-items:center}
+    .rate-field-group{display:flex;align-items:center;gap:5px}
+    .rate-field-label{font-size:0.7rem;color:#718096;font-weight:700}
+    .rate-row input[type=number]{width:110px;text-align:right;font-variant-numeric:tabular-nums;
+      padding:7px 10px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:0.85rem}
+    .rate-row input[type=month]{padding:6px 8px;border:1.5px solid #e2e8f0;border-radius:7px;font-size:0.8rem;font-family:inherit}
+    .rate-row .yen{font-size:0.78rem;color:#718096;font-weight:700}
+    .rate-empty-cat{color:#a0aec0;font-size:0.78rem;font-style:italic;padding:5px 0}
+
+    /* 課金中で稼働なしのセル */
+    .report-table .num-billable-zero{background:#fff5f5;color:#e53e3e;font-weight:700;font-size:0.7rem}
+    .report-table .num-billed{background:#f0fff4}
+    .report-monthly-bar .bar-billable-zero{background:repeating-linear-gradient(45deg,#fed7aa 0px,#fed7aa 4px,#ffedd5 4px,#ffedd5 8px);min-height:4px}
+
+    /* 工数編集モーダル */
+    .te-edit-modal{max-width:520px}
+    .te-edit-modal .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+    .te-edit-modal .form-group{flex:1;min-width:140px}
+    .te-edit-modal .form-group.full{flex-basis:100%}
+    .te-edit-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px;flex-wrap:wrap;gap:10px}
+    .te-edit-actions .left{display:flex;gap:8px}
+    .te-edit-actions .right{display:flex;gap:8px}
+    .btn-te-delete{background:#fff5f5;color:#e53e3e;border:1.5px solid #fed7d7;
+      border-radius:9px;padding:9px 16px;font-size:0.85rem;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-te-delete:hover{background:#fed7d7}
+
+    /* 手動追加ボタン */
+    .btn-te-add{background:white;border:1.5px dashed #fb923c;color:#c2410c;
+      border-radius:9px;padding:7px 14px;font-size:0.78rem;font-weight:700;cursor:pointer;
+      font-family:inherit;margin-left:8px}
+    .btn-te-add:hover{background:#fff7ed}
+
+    @media (max-width:600px){
+      .report-modal{width:100vw;max-height:100vh;border-radius:0;padding:14px}
+      .report-table{font-size:0.72rem;min-width:700px}
+      .report-table th,.report-table td{padding:6px 7px}
+      .report-overall-rate{font-size:1.3rem}
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📋 タスク管理ツール v3</h1>
+    <p>タスク管理＋業務タイマー一体型</p>
+  </div>
+  <div class="header-btns">
+    <span class="header-sync-badge status-noconfig" id="headerSyncBadge" onclick="openIntgModal()" title="クリックで同期設定">⚙️ 同期未設定</span>
+    <span class="header-timer-badge" id="headerTimerBadge" onclick="scrollToTimer()">
+      <span class="htb-dot"></span><span id="headerTimerLabel">計測中</span>
+    </span>
+    <button class="btn-h btn-h-orange" onclick="scrollToTimer()">⏱️ 業務タイマー</button>
+    <button class="btn-h btn-h-orange" onclick="openReportModal()">📊 工数レポート</button>
+    <button class="btn-h btn-h-purple" onclick="openCatManager()">🗂️ カテゴリ管理</button>
+    <button class="btn-h btn-h-purple" onclick="openRecManager()">🔄 繰り返しタスク</button>
+    <button class="btn-h" onclick="openSubcatManager()">⚙️ サブカテゴリ</button>
+    <button class="btn-h btn-h-green" onclick="openTaxSettings()">📅 税務設定</button>
+    <button class="btn-h btn-h-teal" onclick="openIntgModal()">🔗 連携設定</button>
+    <button class="btn-h" onclick="exportJSON()">💾 バックアップ</button>
+    <button class="btn-h btn-h-yellow" onclick="document.getElementById('importFileInput').click()">📂 復元</button>
+    <button class="btn-h" onclick="exportCSV()">📊 CSV出力</button>
+    <input type="file" id="importFileInput" accept=".json" style="display:none" onchange="importJSON(event)" />
+  </div>
+</header>
+
+<div class="container">
+
+  <!-- Add Task -->
+  <div class="card">
+    <h2>➕ 新しいタスクを追加</h2>
+    <div class="form-row">
+      <div class="form-group flex-1">
+        <label>タスク名</label>
+        <input type="text" id="taskName" placeholder="例：レポートを作成する" />
+      </div>
+      <div class="form-group w-auto">
+        <label>締め切り日</label>
+        <input type="date" id="taskDue" />
+      </div>
+      <div class="form-group w-auto">
+        <label>優先度</label>
+        <select id="taskPriority">
+          <option value="high">🔴 高</option>
+          <option value="medium" selected>🟡 中</option>
+          <option value="low">🟢 低</option>
+        </select>
+      </div>
+      <div class="form-group w-auto">
+        <label>カテゴリ</label>
+        <select id="taskCategory" onchange="updateSubcatSelect('taskSubcat',this.value)"></select>
+      </div>
+      <div class="form-group w-auto">
+        <label>サブカテゴリ</label>
+        <select id="taskSubcat"></select>
+      </div>
+      <div class="form-group w-auto">
+        <label>&nbsp;</label>
+        <button class="btn-add" onclick="addTask()">追加する</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⏱ Timer Card -->
+  <div class="card timer-card" id="timerCard">
+    <h2>⏱️ 業務タイマー</h2>
+    <div id="timerActiveArea">
+      <!-- 計測中の表示 or 開始フォーム（renderTimerでセット） -->
+    </div>
+    <div class="timer-history-bar">
+      <div class="timer-tabs">
+        <button class="timer-tab active" id="timerTabToday" onclick="setTimerView('today',this)">本日</button>
+        <button class="timer-tab" id="timerTabWeek" onclick="setTimerView('week',this)">今週</button>
+        <button class="timer-tab" id="timerTabMonth" onclick="setTimerView('month',this)">今月</button>
+        <button class="timer-tab" id="timerTabAll" onclick="setTimerView('all',this)">全期間</button>
+      </div>
+      <button class="btn-te-add" onclick="addManualTimeEntry()">➕ 手動追加</button>
+      <button class="btn-timer-csv" onclick="exportTimeCSV()">📊 工数CSV</button>
+    </div>
+    <div id="timerSummary" class="timer-summary"></div>
+    <div id="timerHistory" class="timer-history"></div>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats">
+    <div class="stat-card"><div class="stat-num" id="statTotal">0</div><div class="stat-label">未完了タスク</div></div>
+    <div class="stat-card"><div class="stat-num" id="statOverdue" style="color:#fc8181">0</div><div class="stat-label">期限超過</div></div>
+    <div class="stat-card"><div class="stat-num" id="statDone" style="color:#68d391">0</div><div class="stat-label">完了済み</div></div>
+    <div class="stat-card clickable" onclick="confirmReset()">
+      <div class="stat-num" style="color:#a0aec0;font-size:1.3rem">🗑️</div><div class="stat-label">データリセット</div>
+    </div>
+  </div>
+
+  <!-- ══ レスポンシブ分割レイアウト ══ -->
+  <div class="layout-split">
+
+    <!-- ── メインカラム（タスク） ── -->
+    <div class="main-col">
+
+      <!-- Date range -->
+      <div class="date-range-bar">
+        <span class="dr-label">表示期間：</span>
+        <button class="dr-btn active" onclick="setDateRange('2m',this)">直近2ヶ月</button>
+        <button class="dr-btn" onclick="setDateRange('1y',this)">1年以内</button>
+        <button class="dr-btn" onclick="setDateRange('all',this)">すべて</button>
+        <label class="no-due-toggle"><input type="checkbox" id="showNoDue" checked onchange="renderTasks()" />期限なしも表示</label>
+      </div>
+
+      <!-- Category Tabs -->
+      <div class="cat-tabs-wrap">
+        <div class="cat-tabs" id="catTabs"></div>
+      </div>
+
+      <!-- Subcat filter -->
+      <div class="subcat-filter-bar" id="subcatFilterBar"></div>
+
+      <!-- Status filters -->
+      <div class="controls">
+        <div class="filter-group">
+          <button class="filter-btn active" onclick="setFilter('all',this)">すべて</button>
+          <button class="filter-btn" onclick="setFilter('pending',this)">未完了</button>
+          <button class="filter-btn" onclick="setFilter('done',this)">完了済み</button>
+          <button class="filter-btn" onclick="setFilter('overdue',this)">期限超過</button>
+        </div>
+        <div class="search-box">
+          <input type="text" id="searchInput" placeholder="検索..." oninput="renderTasks()" />
+        </div>
+      </div>
+
+      <div id="taskList"></div>
+    </div><!-- /main-col -->
+
+    <!-- ── サイドカラム（税務カレンダー） ── -->
+    <div class="side-col">
+      <div class="tax-panel" id="taxPanelWrap">
+        <div class="tax-panel-hdr open" id="taxPanelHdr" onclick="toggleTaxPanel()">
+          <span style="font-size:1.05rem">📅</span>
+          <span class="tax-panel-title" style="font-size:0.88rem">税務カレンダー</span>
+          <div onclick="event.stopPropagation()" style="display:flex;gap:3px;align-items:center;flex-wrap:wrap">
+            <button class="tax-win-btn active" id="twb-60"  onclick="setTaxWindow(60,this)">60日</button>
+            <button class="tax-win-btn"        id="twb-90"  onclick="setTaxWindow(90,this)">3ヶ月</button>
+            <button class="tax-win-btn"        id="twb-180" onclick="setTaxWindow(180,this)">半年</button>
+            <button class="tax-win-btn"        id="twb-365" onclick="setTaxWindow(365,this)">1年</button>
+          </div>
+          <span class="tax-subtitle" id="taxSubtitle" style="margin-left:4px;font-size:0.7rem"></span>
+          <button class="btn-h btn-h-green" style="padding:3px 8px;font-size:0.7rem;margin-left:4px"
+            onclick="event.stopPropagation();openTaxSettings()">⚙️</button>
+          <span class="tax-arrow" id="taxArrow">▼</span>
+        </div>
+        <div class="tax-panel-body open" id="taxPanelBody"></div>
+      </div>
+    </div><!-- /side-col -->
+
+  </div><!-- /layout-split -->
+</div>
+
+
+<!-- ══ Edit Task Modal ══ -->
+<div class="modal-overlay" id="editModal" onclick="closeModalOnBg(event,'editModal')">
+  <div class="modal">
+    <h2>✏️ タスクを編集</h2>
+    <input type="hidden" id="editId" />
+    <div class="form-group"><label>タスク名</label><input type="text" id="editName" /></div>
+    <div class="form-group"><label>締め切り日</label><input type="date" id="editDue" /></div>
+    <div class="form-group"><label>優先度</label>
+      <select id="editPriority">
+        <option value="high">🔴 高</option><option value="medium">🟡 中</option><option value="low">🟢 低</option>
+      </select>
+    </div>
+    <div class="form-group"><label>カテゴリ</label><select id="editCategory" onchange="updateSubcatSelect('editSubcat',this.value)"></select></div>
+    <div class="form-group"><label>サブカテゴリ</label><select id="editSubcat"></select></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('editModal')">キャンセル</button>
+      <button class="btn-save" onclick="saveEdit()">保存する</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Category Manager Modal ══ -->
+<div class="modal-overlay" id="catModal" onclick="closeModalOnBg(event,'catModal')">
+  <div class="modal cat-manage-modal">
+    <h2>🗂️ カテゴリ管理</h2>
+    <div class="cat-list" id="catList"></div>
+
+    <div class="cat-add-form" id="catAddForm">
+      <h3 id="catFormTitle">＋ 新しいカテゴリを追加</h3>
+      <input type="hidden" id="catEditId" value="" />
+      <div class="form-group" style="margin-bottom:10px">
+        <label>カテゴリ名</label>
+        <input type="text" id="catNameInput" placeholder="例：営業管理" />
+      </div>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>絵文字</label>
+        <div class="emoji-picker" id="emojiPicker"></div>
+      </div>
+      <div class="form-group" style="margin-bottom:12px">
+        <label>カラー</label>
+        <div class="color-picker" id="colorPicker"></div>
+      </div>
+      <div style="display:flex;gap:8px">
+        <button class="btn-cancel" onclick="cancelCatEdit()" style="flex:1">キャンセル</button>
+        <button class="btn-save" onclick="saveCat()" style="flex:1" id="catSaveBtn">追加する</button>
+      </div>
+    </div>
+    <div class="modal-actions" style="margin-top:0">
+      <button class="btn-cancel" onclick="closeModal('catModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Recurring Task Manager Modal ══ -->
+<div class="modal-overlay" id="recModal" onclick="closeModalOnBg(event,'recModal')">
+  <div class="modal rec-modal">
+    <h2>🔄 繰り返しタスク管理</h2>
+    <div class="rec-list" id="recList"></div>
+    <div class="rec-form-card">
+      <h3>＋ 新しい繰り返しタスクを追加</h3>
+      <div class="form-group" style="margin-bottom:10px"><label>タスク名</label><input type="text" id="recName" placeholder="例：請求書発行" /></div>
+      <div class="form-row" style="gap:9px;margin-bottom:10px">
+        <div class="form-group w-auto"><label>繰り返し</label>
+          <select id="recType" onchange="toggleRecFields()">
+            <option value="monthly">毎月</option><option value="yearly">毎年</option>
+          </select>
+        </div>
+        <div class="form-group w-auto" id="recDayWrap"><label>何日まで</label>
+          <input type="number" id="recDay" min="1" max="31" value="5" style="width:75px" />
+        </div>
+        <div class="form-group w-auto" id="recMonthWrap" style="display:none"><label>月</label>
+          <select id="recMonth">
+            <option value="1">1月</option><option value="2">2月</option><option value="3">3月</option>
+            <option value="4">4月</option><option value="5">5月</option><option value="6">6月</option>
+            <option value="7">7月</option><option value="8">8月</option><option value="9">9月</option>
+            <option value="10">10月</option><option value="11">11月</option><option value="12">12月</option>
+          </select>
+        </div>
+        <div class="form-group w-auto" id="recYearDayWrap" style="display:none"><label>日</label>
+          <input type="number" id="recYearDay" min="1" max="31" value="1" style="width:68px" />
+        </div>
+      </div>
+      <div class="form-row" style="gap:9px;margin-bottom:10px">
+        <div class="form-group w-auto"><label>優先度</label>
+          <select id="recPriority">
+            <option value="high">🔴 高</option><option value="medium" selected>🟡 中</option><option value="low">🟢 低</option>
+          </select>
+        </div>
+        <div class="form-group w-auto"><label>カテゴリ</label>
+          <select id="recCategory" onchange="updateSubcatSelect('recSubcat',this.value)"></select>
+        </div>
+        <div class="form-group w-auto"><label>サブカテゴリ</label><select id="recSubcat"></select></div>
+      </div>
+      <button class="btn-save-purple" onclick="addRecurring()" style="width:100%">追加する</button>
+    </div>
+    <div class="modal-actions" style="margin-top:0">
+      <button class="btn-cancel" onclick="closeModal('recModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Subcat Manager Modal ══ -->
+<div class="modal-overlay" id="subcatModal" onclick="closeModalOnBg(event,'subcatModal')">
+  <div class="modal subcat-manage-modal">
+    <h2>⚙️ サブカテゴリ管理</h2>
+    <p style="font-size:0.8rem;color:#a0aec0">カテゴリを選んでサブカテゴリを追加・削除できます</p>
+    <div class="cat-selector" id="subcatCatSelector"></div>
+    <div class="subcat-list" id="subcatList"></div>
+    <div class="subcat-add-row">
+      <input type="text" id="newSubcatInput" placeholder="新しいサブカテゴリ名を入力..." />
+      <button class="btn-subcat-add" onclick="addSubcat()">追加</button>
+    </div>
+    <div class="modal-actions" style="margin-top:13px">
+      <button class="btn-cancel" onclick="closeModal('subcatModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Tax Settings Modal ══ -->
+<div class="modal-overlay" id="taxModal" onclick="closeModalOnBg(event,'taxModal')">
+  <div class="modal tax-modal">
+    <h2>📅 税務カレンダー設定</h2>
+    <div class="modal-tabs">
+      <button class="modal-tab-btn active" data-tab="events" onclick="switchTaxTab('events')">📋 税務イベント一覧</button>
+      <button class="modal-tab-btn" data-tab="assign" onclick="switchTaxTab('assign')">👥 クライアント別設定</button>
+    </div>
+    <div id="taxModalBody"></div>
+    <div class="modal-actions" style="margin-top:13px">
+      <button class="btn-cancel" onclick="closeModal('taxModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ Integration Settings Modal ══ -->
+<div class="modal-overlay" id="intgModal" onclick="closeModalOnBg(event,'intgModal')">
+  <div class="modal intg-modal">
+    <h2>🔗 外部サービス連携設定</h2>
+
+    <!-- Google Drive 同期 -->
+    <div class="intg-section drive-section">
+      <h3>☁️ Google Drive 同期（iPhone/PC間でデータ共有） <span class="intg-status ng" id="gdriveStatus">未設定</span></h3>
+      <div class="intg-row">
+        <div class="form-group" style="flex:2">
+          <label>OAuth クライアントID（Googleカレンダーと共通）</label>
+          <input type="text" id="intgClientIdShared" placeholder="xxxxx.apps.googleusercontent.com" />
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-intg" onclick="saveIntgFormShared()">💾 設定を保存</button>
+        <button class="btn-intg btn-intg-blue" onclick="gdriveAuthorize()">🔑 Driveに認証して同期</button>
+        <button class="btn-intg btn-intg-green" onclick="gdriveSync({silent:false})">🔄 今すぐ同期</button>
+        <button class="btn-intg btn-intg-red" onclick="gdriveSignOut()">🚪 サインアウト</button>
+      </div>
+      <div class="intg-toggle-row">
+        <label class="intg-toggle">
+          <input type="checkbox" id="intgGdriveAutoSync" onchange="setGdriveAutoSync(this.checked)" />
+          <span class="intg-toggle-label">📡 自動同期を有効にする</span>
+        </label>
+        <span style="font-size:0.73rem;color:#4a5568">（変更があると3秒後に自動アップロード／開いた時に最新を取得）</span>
+      </div>
+      <div class="intg-status-info" id="gdriveStatusInfo">
+        <b>📁 保存先：</b> Google Drive内の <code>タスク管理v3-同期データ</code> フォルダ → <code>data.json</code><br>
+        <b>📍 初回作成場所：</b> マイドライブ直下（その後ご自身で <code>開発部門</code> 配下へ移動可能・追跡継続）<br>
+        <b>🔒 同期されるもの：</b> タスク・時間記録・カテゴリ・月額設定・税務カレンダー設定<br>
+        <b>🚫 同期されないもの：</b> 計測中タイマー・連携設定（端末ごと）<br>
+        <b>⚠️ 注意：</b> 1つの端末で計測 → ストップしてから別端末で次の計測。同時計測すると二重記録になります。
+      </div>
+      <div class="intg-note">
+        ① <a href="https://console.cloud.google.com/" target="_blank">Google Cloud Console</a> で新規プロジェクト作成 → 「APIとサービス」→「ライブラリ」→ <b>Google Drive API</b> を有効化<br>
+        ② 「APIとサービス」→「OAuth同意画面」で外部・ユーザータイプを設定（自分のメールを追加）<br>
+        ③ 「認証情報」→ <b>「OAuth クライアントID」を作成</b>（種類：ウェブアプリケーション）<br>
+        ④ 承認済みJavaScriptオリジンに <code>https://【ユーザー名】.github.io</code> を追加<br>
+        ⑤ クライアントIDをここにコピペ → 「設定を保存」→「Driveに認証して同期」
+      </div>
+      <div class="intg-log" id="gdriveLog"></div>
+    </div>
+
+    <!-- Google Calendar -->
+    <div class="intg-section">
+      <h3>📅 Googleカレンダー <span class="intg-status ng" id="gcalStatus">未設定</span></h3>
+      <div class="intg-row">
+        <div class="form-group" style="flex:2">
+          <label>OAuth クライアントID</label>
+          <input type="text" id="intgClientId" placeholder="xxxxx.apps.googleusercontent.com" />
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>カレンダーID</label>
+          <input type="text" id="intgCalId" placeholder="primary" />
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-intg" onclick="saveIntgForm()">💾 設定を保存</button>
+        <button class="btn-intg btn-intg-blue" onclick="gcalAuthorize()">🔑 Googleアカウントで認証</button>
+        <button class="btn-intg btn-intg-green" onclick="gcalExportTasks()">📤 タスクをカレンダーに書き出す</button>
+      </div>
+      <div class="intg-note">
+        ① GoogleクラウドコンソールでOAuthクライアントID（ウェブアプリ）を作成してください。<br>
+        ② 承認済みのJavaScriptオリジンに <code>null</code> または <code>file://</code> を追加してください。<br>
+        ③ 「認証」→「書き出す」の順に実行します。未完了タスク（期限あり）が登録されます。
+      </div>
+      <div class="intg-log" id="gcalLog"></div>
+    </div>
+
+    <!-- Chatwork -->
+    <div class="intg-section">
+      <h3>💬 Chatwork <span class="intg-status ng" id="cwStatus">未設定</span></h3>
+      <div class="intg-row">
+        <div class="form-group" style="flex:2">
+          <label>APIトークン</label>
+          <input type="password" id="intgCwToken" placeholder="Chatwork設定画面 > API" />
+        </div>
+        <div class="form-group" style="flex:1">
+          <label>ルームID</label>
+          <input type="text" id="intgCwRoomId" placeholder="例: 123456789" />
+        </div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn-intg" onclick="saveIntgForm()">💾 設定を保存</button>
+        <button class="btn-intg btn-intg-blue" onclick="cwLoadTasks()">📥 Chatworkタスクを取り込む</button>
+        <button class="btn-intg btn-intg-green" onclick="cwExportTasks()">📤 タスクをChatworkに書き出す</button>
+      </div>
+      <div class="intg-note">
+        ① Chatworkの設定 > API でAPIトークンを発行してください。<br>
+        ② 書き出したいチャットのルームIDを入力してください（URLの末尾の数字）。<br>
+        ③「取り込む」→ タスク一覧で選択 → インポート実行。「書き出す」→ 新規タスクをChatworkに登録。
+      </div>
+      <div id="cwTaskListWrap"></div>
+      <div class="intg-log" id="cwLog"></div>
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('intgModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 工数レポート Modal ══ -->
+<div class="modal-overlay" id="reportModal" onclick="closeModalOnBg(event,'reportModal')">
+  <div class="modal report-modal">
+    <div class="report-header">
+      <h2>📊 工数レポート</h2>
+      <div class="report-toolbar">
+        <label>表示年：
+          <select id="reportYear" onchange="renderReport()"></select>
+        </label>
+        <button class="btn-h btn-h-purple" onclick="openRateModal()">💰 月額設定</button>
+        <button class="btn-h btn-h-green" onclick="exportReportCSV()">📥 レポートCSV</button>
+      </div>
+    </div>
+    <div id="reportBody"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('reportModal')">閉じる</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 月額設定 Modal ══ -->
+<div class="modal-overlay" id="rateModal" onclick="closeModalOnBg(event,'rateModal')">
+  <div class="modal rate-modal">
+    <h2>💰 クライアント（サブカテゴリ）月額設定</h2>
+    <p class="rate-note">各サブカテゴリの月額顧問料を設定します。<br>
+      <b>発生開始</b> を設定すると、その月から課金対象になります（稼働なしでも月額は発生）。<br>
+      <b>終了</b> は契約終了月（任意）。空欄なら継続中。</p>
+    <div id="rateEditorBody"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('rateModal')">キャンセル</button>
+      <button class="btn-save" onclick="saveRates()">💾 保存する</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ 工数編集 Modal ══ -->
+<div class="modal-overlay" id="teEditModal" onclick="closeModalOnBg(event,'teEditModal')">
+  <div class="modal te-edit-modal">
+    <h2 id="teEditTitle">✏️ 工数記録の編集</h2>
+    <input type="hidden" id="teEditId" />
+    <div class="form-row">
+      <div class="form-group"><label>日付</label><input type="date" id="teEditDate" /></div>
+      <div class="form-group"><label>開始時刻</label><input type="time" id="teEditTime" /></div>
+      <div class="form-group"><label>時間（分）</label><input type="number" id="teEditMinutes" min="1" step="1" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>カテゴリ</label>
+        <select id="teEditCategory" onchange="updateSubcatSelect('teEditSubcat',this.value)"></select>
+      </div>
+      <div class="form-group"><label>サブカテゴリ</label>
+        <select id="teEditSubcat"></select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full"><label>業務名</label><input type="text" id="teEditName" /></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group full"><label>メモ</label><input type="text" id="teEditMemo" /></div>
+    </div>
+    <div class="te-edit-actions">
+      <div class="left"><button class="btn-te-delete" id="teEditDeleteBtn" onclick="deleteTimeEntryFromModal()">🗑️ 削除</button></div>
+      <div class="right">
+        <button class="btn-cancel" onclick="closeModal('teEditModal')">キャンセル</button>
+        <button class="btn-save" onclick="saveTimeEntryEdit()">💾 保存</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<script>
+// ══════════════════════════════════════════════════════
+//  Constants
+// ══════════════════════════════════════════════════════
+const EMOJI_OPTIONS  = ['💰','📊','🚐','📌','📁','💼','🏢','👥','📝','🎯','🔧','📦','🌟','💡','🏠','🎨','🔑','📅','🤝','⚡'];
+const COLOR_PRESETS  = [
+  {bg:'#ebf4ff',color:'#3b82f6'},
+  {bg:'#f0fff4',color:'#276749'},
+  {bg:'#fff7ed',color:'#c05621'},
+  {bg:'#f7f7f7',color:'#718096'},
+  {bg:'#f5f3ff',color:'#7c3aed'},
+  {bg:'#fff0f6',color:'#c2185b'},
+  {bg:'#e6fffa',color:'#2c7a7b'},
+  {bg:'#fff5f5',color:'#e53e3e'},
+  {bg:'#fffff0',color:'#b7791f'},
+  {bg:'#edf2ff',color:'#4c51bf'},
+];
+
+const DEFAULT_CATEGORIES = [
+  {id:'リベ税',      name:'リベ税',      emoji:'💰', bg:'#ebf4ff', color:'#3b82f6'},
+  {id:'経理支援',    name:'経理支援',    emoji:'📊', bg:'#f0fff4', color:'#276749'},
+  {id:'キッチンカー制作', name:'キッチンカー制作', emoji:'🚐', bg:'#fff7ed', color:'#c05621'},
+  {id:'その他',      name:'その他',      emoji:'📌', bg:'#f7f7f7', color:'#718096'},
+];
+
+// Pre-populated Japanese tax events
+const DEFAULT_TAX_EVENTS = [
+  {id:'TE001',name:'源泉所得税・住民税特別徴収 納付',recType:'monthly',dayOfMonth:10,month:null,note:'給与支払翌月10日'},
+  {id:'TE002',name:'源泉所得税 納期の特例（1〜6月分）',recType:'yearly',dayOfMonth:10,month:7,note:'1月〜6月分'},
+  {id:'TE003',name:'源泉所得税 納期の特例（7〜12月分）',recType:'yearly',dayOfMonth:20,month:1,note:'7月〜12月分'},
+  {id:'TE004',name:'確定申告・納付（所得税）',recType:'yearly',dayOfMonth:15,month:3,note:'個人'},
+  {id:'TE005',name:'消費税 確定申告・納付（個人）',recType:'yearly',dayOfMonth:31,month:3,note:'個人事業主'},
+  {id:'TE006',name:'法定調書合計表・給与支払報告書 提出',recType:'yearly',dayOfMonth:31,month:1,note:''},
+  {id:'TE007',name:'償却資産税 申告',recType:'yearly',dayOfMonth:31,month:1,note:''},
+  {id:'TE008',name:'固定資産税 第1期',recType:'yearly',dayOfMonth:30,month:4,note:''},
+  {id:'TE009',name:'固定資産税 第2期',recType:'yearly',dayOfMonth:31,month:7,note:''},
+  {id:'TE010',name:'住民税 第1期',recType:'yearly',dayOfMonth:30,month:6,note:''},
+  {id:'TE011',name:'住民税 第2期',recType:'yearly',dayOfMonth:31,month:8,note:''},
+  {id:'TE012',name:'年末調整',recType:'yearly',dayOfMonth:31,month:12,note:''},
+  {id:'TE013',name:'法人税・消費税 確定申告（3月決算）',recType:'yearly',dayOfMonth:31,month:5,note:'3月決算法人'},
+  {id:'TE014',name:'法人税 中間申告（3月決算）',recType:'yearly',dayOfMonth:30,month:11,note:'3月決算法人'},
+  {id:'TE015',name:'消費税 中間申告（年1回）',recType:'yearly',dayOfMonth:30,month:11,note:''},
+];
+
+// ══════════════════════════════════════════════════════
+//  Data
+// ══════════════════════════════════════════════════════
+let tasks          = JSON.parse(localStorage.getItem('tasks')          || '[]');
+let subcats        = JSON.parse(localStorage.getItem('subcats')        || '{}');
+let recurringTasks = JSON.parse(localStorage.getItem('recurringTasks') || '[]');
+let categories     = JSON.parse(localStorage.getItem('categories')     || 'null') || DEFAULT_CATEGORIES;
+let taxEventTypes  = JSON.parse(localStorage.getItem('taxEventTypes')  || 'null') || DEFAULT_TAX_EVENTS.map(e=>({...e}));
+let clientTaxMap   = JSON.parse(localStorage.getItem('clientTaxMap')   || '{}');
+
+// ══════════════════════════════════════════════════════
+//  Integration Settings (v2)
+// ══════════════════════════════════════════════════════
+let intgSettings = JSON.parse(localStorage.getItem('intgSettings') || '{}');
+// intgSettings: { gcal: { clientId, calendarId }, cw: { token, roomId } }
+
+function saveIntgSettings() { localStorage.setItem('intgSettings', JSON.stringify(intgSettings)); }
+
+// ─ Google Calendar state ─
+let gcalTokenClient = null;
+let gcalAccessToken = null;
+let gcalReady       = false;
+
+// ─ Log helpers ─
+function intgLog(logId, msg, isErr) {
+  const el = document.getElementById(logId);
+  if (!el) return;
+  el.classList.add('show');
+  const line = document.createElement('div');
+  line.style.color = isErr ? '#e53e3e' : '#2d3748';
+  line.textContent = `[${new Date().toLocaleTimeString('ja-JP')}] ${msg}`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+function intgLogClear(logId) {
+  const el = document.getElementById(logId);
+  if (el) { el.innerHTML = ''; el.classList.remove('show'); }
+}
+
+// ══════════════════════════════════════════════════════
+//  Integration Modal
+// ══════════════════════════════════════════════════════
+function openIntgModal() {
+  renderIntgModal();
+  document.getElementById('intgModal').classList.add('open');
+}
+
+function renderIntgModal() {
+  const gcal = intgSettings.gcal || {};
+  const cw   = intgSettings.cw   || {};
+  // 共通OAuth ClientID（Drive同期セクション）
+  const sharedEl = document.getElementById('intgClientIdShared');
+  if (sharedEl) sharedEl.value = gcal.clientId || '';
+  // Calendar専用フィールド
+  document.getElementById('intgClientId').value   = gcal.clientId   || '';
+  document.getElementById('intgCalId').value      = gcal.calendarId || 'primary';
+  document.getElementById('intgCwToken').value    = cw.token        || '';
+  document.getElementById('intgCwRoomId').value   = cw.roomId       || '';
+  // Drive 同期トグル
+  const autoEl = document.getElementById('intgGdriveAutoSync');
+  if (autoEl) autoEl.checked = isGdriveAutoSyncEnabled();
+  updateGcalStatus();
+  updateCwStatus();
+  updateGdriveStatus();
+}
+
+function updateGdriveStatus() {
+  const el = document.getElementById('gdriveStatus');
+  if (!el) return;
+  el.classList.remove('ok','ng','connecting');
+  const cid = (intgSettings.gcal || {}).clientId;
+  if (!cid) { el.classList.add('ng'); el.textContent = '未設定'; return; }
+  if (!_gdriveAccessToken) { el.classList.add('ng'); el.textContent = '要認証'; return; }
+  el.classList.add('ok');
+  el.textContent = _gdriveLastSync ? `最終同期 ${new Date(_gdriveLastSync).toLocaleString('ja-JP')}` : '認証済';
+}
+
+// Drive同期セクションから「設定を保存」を押した時：共通ClientIDを保存
+function saveIntgFormShared() {
+  const cid = document.getElementById('intgClientIdShared').value.trim();
+  intgSettings.gcal = Object.assign({}, intgSettings.gcal || {}, {
+    clientId: cid,
+    calendarId: (intgSettings.gcal && intgSettings.gcal.calendarId) || 'primary',
+  });
+  saveIntgSettings();
+  // Drive 認証クライアントを再構築
+  _gdriveTokenClient = null;
+  _gdriveAccessToken = null;
+  // Calendar セクションの入力欄も同期
+  const calEl = document.getElementById('intgClientId');
+  if (calEl) calEl.value = cid;
+  updateGcalStatus();
+  updateGdriveStatus();
+  setSyncStatus(cid ? 'unauth' : 'noconfig', cid ? '認証してください' : 'OAuth クライアントID未設定');
+  alert('✅ 設定を保存しました。次に「🔑 Driveに認証して同期」を押してください。');
+}
+
+function saveIntgForm() {
+  intgSettings.gcal = {
+    clientId:   document.getElementById('intgClientId').value.trim(),
+    calendarId: document.getElementById('intgCalId').value.trim() || 'primary',
+  };
+  intgSettings.cw = {
+    token:  document.getElementById('intgCwToken').value.trim(),
+    roomId: document.getElementById('intgCwRoomId').value.trim(),
+  };
+  saveIntgSettings();
+  gcalAccessToken = null; gcalReady = false; // reset auth on settings change
+  updateGcalStatus(); updateCwStatus();
+  alert('✅ 設定を保存しました');
+}
+
+function updateGcalStatus() {
+  const el = document.getElementById('gcalStatus');
+  if (!el) return;
+  const cid = (intgSettings.gcal || {}).clientId;
+  if (!cid) { el.className='intg-status ng'; el.textContent='未設定'; return; }
+  if (gcalAccessToken) { el.className='intg-status ok'; el.textContent='認証済み'; }
+  else { el.className='intg-status ng'; el.textContent='未認証'; }
+}
+function updateCwStatus() {
+  const el = document.getElementById('cwStatus');
+  if (!el) return;
+  const tok = (intgSettings.cw || {}).token;
+  el.className = tok ? 'intg-status ok' : 'intg-status ng';
+  el.textContent = tok ? 'トークン設定済み' : '未設定';
+}
+
+// ══════════════════════════════════════════════════════
+//  Google Calendar Integration
+// ══════════════════════════════════════════════════════
+function gcalAuthorize() {
+  const clientId = (intgSettings.gcal || {}).clientId;
+  if (!clientId) { alert('先にクライアントIDを保存してください'); return; }
+  intgLogClear('gcalLog');
+  intgLog('gcalLog', 'Googleアカウントへの認証を開始します...');
+
+  if (!window.google || !window.google.accounts) {
+    intgLog('gcalLog', 'Google Identity Servicesの読み込みを待っています...', false);
+    setTimeout(gcalAuthorize, 1500); return;
+  }
+  gcalTokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: clientId,
+    scope: 'https://www.googleapis.com/auth/calendar.events',
+    callback: (resp) => {
+      if (resp.error) { intgLog('gcalLog', '認証エラー: ' + resp.error, true); return; }
+      gcalAccessToken = resp.access_token;
+      gcalReady = true;
+      intgLog('gcalLog', '✅ 認証成功！Googleカレンダーへの書き込みが可能になりました');
+      updateGcalStatus();
+    }
+  });
+  gcalTokenClient.requestAccessToken();
+}
+
+async function gcalExportTasks() {
+  if (!gcalAccessToken) { alert('先に「Googleアカウントで認証」を押してください'); return; }
+  const calId = (intgSettings.gcal || {}).calendarId || 'primary';
+  intgLogClear('gcalLog');
+
+  // 未完了タスク＋繰り返しタスクで期限あるものを対象
+  const targets = [
+    ...tasks.filter(t => !t.completed && t.due),
+    ...recurringTasks.map(rt => ({
+      name: rt.name + '（繰り返し）',
+      due: getRecNextDue(rt).toISOString().slice(0,10),
+      priority: rt.priority, category: rt.category, subcat: rt.subcat
+    }))
+  ];
+  if (!targets.length) { intgLog('gcalLog', '書き出し対象のタスクがありません（期限なしタスクは除外）'); return; }
+
+  intgLog('gcalLog', `${targets.length}件のタスクをGoogleカレンダーに書き出します...`);
+  let ok = 0, ng = 0;
+  for (const t of targets) {
+    try {
+      const cat = getCat(t.category);
+      const body = {
+        summary: `[${cat.emoji}${cat.name}] ${t.name}`,
+        description: `優先度: ${PRI_LABEL[t.priority] || ''}${t.subcat ? '\nクライアント: ' + t.subcat : ''}\n\nタスク管理ツールより自動登録`,
+        start: { date: t.due },
+        end:   { date: t.due },
+        colorId: t.priority === 'high' ? '11' : t.priority === 'medium' ? '5' : '2',
+      };
+      const res = await fetch(
+        `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calId)}/events`,
+        { method:'POST', headers:{ Authorization:`Bearer ${gcalAccessToken}`, 'Content-Type':'application/json' }, body: JSON.stringify(body) }
+      );
+      if (!res.ok) throw new Error(await res.text());
+      ok++;
+      intgLog('gcalLog', `✅ ${t.name}`);
+    } catch(e) {
+      ng++;
+      intgLog('gcalLog', `❌ ${t.name}: ${e.message}`, true);
+    }
+  }
+  intgLog('gcalLog', `完了: 成功${ok}件 / 失敗${ng}件`);
+}
+
+// ══════════════════════════════════════════════════════
+//  Chatwork Integration
+// ══════════════════════════════════════════════════════
+async function cwFetch(path, opts = {}) {
+  const token  = (intgSettings.cw || {}).token;
+  const roomId = (intgSettings.cw || {}).roomId;
+  if (!token) throw new Error('Chatwork APIトークンが設定されていません');
+  const url = `https://api.chatwork.com/v2${path.replace('{roomId}', roomId)}`;
+  const res = await fetch(url, {
+    ...opts,
+    headers: { 'X-ChatWorkToken': token, ...(opts.headers || {}) }
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`HTTP ${res.status}: ${txt}`);
+  }
+  return res.json();
+}
+
+let cwImportList = [];
+
+async function cwLoadTasks() {
+  const roomId = (intgSettings.cw || {}).roomId;
+  if (!roomId) { alert('先にルームIDを保存してください'); return; }
+  intgLogClear('cwLog');
+  intgLog('cwLog', 'Chatworkからタスクを取得中...');
+  try {
+    const data = await cwFetch('/rooms/{roomId}/tasks?status=open');
+    cwImportList = data;
+    renderCwImportList(data);
+    intgLog('cwLog', `✅ ${data.length}件の未完了タスクを取得しました`);
+  } catch(e) {
+    intgLog('cwLog', '❌ ' + e.message, true);
+    if (e.message.includes('Failed to fetch')) {
+      intgLog('cwLog', '※ CORSエラーの場合: HTTPSサーバー経由でファイルを開いてください', true);
+    }
+  }
+}
+
+function renderCwImportList(data) {
+  const wrap = document.getElementById('cwTaskListWrap');
+  if (!wrap) return;
+  if (!data.length) { wrap.innerHTML = '<div style="font-size:0.8rem;color:#a0aec0;padding:8px 0">未完了タスクはありません</div>'; return; }
+  wrap.innerHTML = `
+    <div class="cw-task-list">
+      ${data.map((t,i) => {
+        const due = t.limit_time ? new Date(t.limit_time * 1000).toISOString().slice(0,10) : '';
+        const assignee = t.assigned_by_account ? t.assigned_by_account.name : '';
+        return `<label class="cw-task-item">
+          <input type="checkbox" data-i="${i}" checked />
+          <div class="cw-task-body">
+            <div class="cw-task-name">${escHtml(t.body)}</div>
+            <div class="cw-task-meta">${due ? '期限: ' + fmtDate(due) + ' ／ ' : ''}担当: ${escHtml(assignee)}</div>
+          </div>
+        </label>`;
+      }).join('')}
+    </div>
+    <div class="cw-import-actions">
+      <div class="form-group" style="flex:1">
+        <label>取り込み先カテゴリ</label>
+        <select id="cwImportCat">${categories.map(c=>`<option value="${escHtml(c.id)}">${c.emoji} ${escHtml(c.name)}</option>`).join('')}</select>
+      </div>
+      <button class="btn-intg btn-intg-blue" onclick="cwImportSelected()">✅ 選択タスクを取り込む</button>
+    </div>`;
+}
+
+function cwImportSelected() {
+  const checkboxes = document.querySelectorAll('#cwTaskListWrap input[type=checkbox]:checked');
+  if (!checkboxes.length) { alert('取り込むタスクを選択してください'); return; }
+  const catId = document.getElementById('cwImportCat')?.value || categories[0]?.id;
+  let added = 0;
+  checkboxes.forEach(cb => {
+    const t = cwImportList[Number(cb.dataset.i)];
+    if (!t) return;
+    const due = t.limit_time ? new Date(t.limit_time * 1000).toISOString().slice(0,10) : '';
+    tasks.unshift({
+      id: Date.now() + added,
+      name: t.body,
+      due,
+      priority: 'medium',
+      category: catId,
+      subcat: '',
+      completed: false,
+      createdAt: new Date().toISOString(),
+      cwTaskId: t.task_id,
+    });
+    added++;
+  });
+  saveTasks(); renderTasks();
+  intgLog('cwLog', `✅ ${added}件のタスクを取り込みました`);
+  alert(`✅ ${added}件のタスクを取り込みました`);
+}
+
+async function cwExportTasks() {
+  const roomId = (intgSettings.cw || {}).roomId;
+  if (!roomId) { alert('先にルームIDを保存してください'); return; }
+  intgLogClear('cwLog');
+  const targets = tasks.filter(t => !t.completed && !t.cwTaskId); // 未完了かつChatwork未連携
+  if (!targets.length) { intgLog('cwLog', '書き出し対象のタスクがありません（完了済み・取り込み済みは除外）'); return; }
+  intgLog('cwLog', `${targets.length}件のタスクをChatworkに書き出します...`);
+  let ok = 0, ng = 0;
+  for (const t of targets) {
+    try {
+      const body = new URLSearchParams({
+        body: `[${getCat(t.category).name}] ${t.name}`,
+        ...(t.due ? { limit: Math.floor(new Date(t.due + 'T23:59:59').getTime() / 1000), limit_type: 'date' } : {}),
+      });
+      const res = await cwFetch('/rooms/{roomId}/tasks', { method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body });
+      t.cwTaskId = res.task_ids?.[0];
+      ok++;
+      intgLog('cwLog', `✅ ${t.name}`);
+    } catch(e) {
+      ng++;
+      intgLog('cwLog', `❌ ${t.name}: ${e.message}`, true);
+    }
+  }
+  saveTasks();
+  intgLog('cwLog', `完了: 成功${ok}件 / 失敗${ng}件`);
+}
+
+const PRI_LABEL = {high:'高',medium:'中',low:'低'};
+const PRI_ORDER = {high:0,medium:1,low:2};
+
+let currentFilter    = 'all';
+let currentCatFilter = 'all';
+let currentSubFilter = 'all';
+let currentDateRange = '2m';
+let managerCat       = null;
+
+// Category editor state
+let selectedEmoji    = EMOJI_OPTIONS[0];
+let selectedColorIdx = 0;
+let editingCatId     = null;
+
+// Tax panel state
+let taxPanelOpen    = true;
+let taxActiveTab    = 'events';
+let assignClientKey = null;
+let taxPanelWindow  = 60; // days to look ahead
+
+// ══════════════════════════════════════════════════════
+//  Persistence
+// ══════════════════════════════════════════════════════
+function saveTasks()       { localStorage.setItem('tasks',          JSON.stringify(tasks)); }
+function saveSubcats()     { localStorage.setItem('subcats',        JSON.stringify(subcats)); }
+function saveRec()         { localStorage.setItem('recurringTasks', JSON.stringify(recurringTasks)); }
+function saveCats()        { localStorage.setItem('categories',     JSON.stringify(categories)); }
+function saveTaxEvents()   { localStorage.setItem('taxEventTypes',  JSON.stringify(taxEventTypes)); }
+function saveClientTaxMap(){ localStorage.setItem('clientTaxMap',   JSON.stringify(clientTaxMap)); }
+
+function getCat(id)     { return categories.find(c=>c.id===id) || {id,name:id,emoji:'📌',bg:'#f7f7f7',color:'#718096'}; }
+function getSubcats(id) { return subcats[id] || []; }
+
+// ══════════════════════════════════════════════════════
+//  Category select helpers
+// ══════════════════════════════════════════════════════
+function populateCatSelects() {
+  const opts = categories.map(c=>`<option value="${escHtml(c.id)}">${c.emoji} ${escHtml(c.name)}</option>`).join('');
+  ['taskCategory','editCategory','recCategory'].forEach(id=>{
+    const el=document.getElementById(id); if(!el) return;
+    const cur=el.value;
+    el.innerHTML=opts;
+    if ([...el.options].some(o=>o.value===cur)) el.value=cur;
+  });
+}
+
+function updateSubcatSelect(selId, catId) {
+  const sel  = document.getElementById(selId); if(!sel) return;
+  const list = getSubcats(catId);
+  sel.innerHTML = '<option value="">（なし）</option>'
+    + list.map(s=>`<option value="${escHtml(s)}">${escHtml(s)}</option>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  Category Manager
+// ══════════════════════════════════════════════════════
+function openCatManager() {
+  editingCatId=null; selectedEmoji=EMOJI_OPTIONS[0]; selectedColorIdx=0;
+  renderCatList(); renderEmojiPicker(); renderColorPicker();
+  resetCatForm();
+  document.getElementById('catModal').classList.add('open');
+  setTimeout(()=>document.getElementById('catNameInput').focus(),100);
+}
+
+function renderCatList() {
+  const el=document.getElementById('catList');
+  if (!categories.length) { el.innerHTML='<div class="empty-subcat">カテゴリがありません</div>'; return; }
+  el.innerHTML = categories.map(c=>{
+    const taskCount = tasks.filter(t=>t.category===c.id).length + recurringTasks.filter(r=>r.category===c.id).length;
+    const subCount  = getSubcats(c.id).length;
+    return `
+    <div class="cat-list-item">
+      <div class="cat-preview" style="background:${c.bg}">${c.emoji}</div>
+      <div class="cat-info">
+        <div class="cat-name-text">${escHtml(c.name)}</div>
+        <div class="cat-sub-count">タスク ${taskCount}件 ／ サブカテゴリ ${subCount}件</div>
+      </div>
+      <div class="cat-actions">
+        <button class="btn-cat-edit" onclick="startEditCat('${escAttr(c.id)}')" title="編集">✏️</button>
+        <button class="btn-cat-del"  onclick="deleteCat('${escAttr(c.id)}')"    title="削除">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderEmojiPicker() {
+  document.getElementById('emojiPicker').innerHTML = EMOJI_OPTIONS.map(e=>
+    `<button type="button" class="emoji-opt ${e===selectedEmoji?'selected':''}" onclick="selectEmoji('${e}')">${e}</button>`
+  ).join('');
+}
+
+function renderColorPicker() {
+  document.getElementById('colorPicker').innerHTML = COLOR_PRESETS.map((c,i)=>
+    `<div class="color-opt ${i===selectedColorIdx?'selected':''}"
+      style="background:${c.color};border-color:${i===selectedColorIdx?'#2d3748':'transparent'}"
+      onclick="selectColor(${i})" title="${c.color}"></div>`
+  ).join('');
+}
+
+function selectEmoji(e) { selectedEmoji=e; renderEmojiPicker(); }
+function selectColor(i) { selectedColorIdx=i; renderColorPicker(); }
+
+function startEditCat(id) {
+  const c=getCat(id); if(!c) return;
+  editingCatId=id;
+  document.getElementById('catEditId').value    = id;
+  document.getElementById('catNameInput').value = c.name;
+  document.getElementById('catFormTitle').textContent = '✏️ カテゴリを編集';
+  document.getElementById('catSaveBtn').textContent   = '保存する';
+  selectedEmoji    = c.emoji;
+  selectedColorIdx = COLOR_PRESETS.findIndex(p=>p.color===c.color);
+  if (selectedColorIdx<0) selectedColorIdx=0;
+  renderEmojiPicker(); renderColorPicker();
+  document.getElementById('catNameInput').focus();
+}
+
+function cancelCatEdit() {
+  editingCatId=null; resetCatForm(); renderEmojiPicker(); renderColorPicker();
+}
+
+function resetCatForm() {
+  editingCatId=null;
+  document.getElementById('catEditId').value    = '';
+  document.getElementById('catNameInput').value = '';
+  document.getElementById('catFormTitle').textContent = '＋ 新しいカテゴリを追加';
+  document.getElementById('catSaveBtn').textContent   = '追加する';
+  selectedEmoji=EMOJI_OPTIONS[0]; selectedColorIdx=0;
+}
+
+function saveCat() {
+  const name = document.getElementById('catNameInput').value.trim();
+  if (!name) { flash('catNameInput'); return; }
+  const preset = COLOR_PRESETS[selectedColorIdx];
+
+  if (editingCatId) {
+    const cat = categories.find(c=>c.id===editingCatId);
+    if (!cat) return;
+    const oldName = cat.name;
+    cat.name  = name;
+    cat.emoji = selectedEmoji;
+    cat.bg    = preset.bg;
+    cat.color = preset.color;
+    if (name !== oldName) {
+      const newId = name;
+      if (categories.some(c=>c.id===newId && c.id!==editingCatId)) {
+        alert('同じ名前のカテゴリがすでにあります'); return;
+      }
+      cat.id = newId;
+      tasks.forEach(t=>{ if(t.category===editingCatId) t.category=newId; });
+      recurringTasks.forEach(r=>{ if(r.category===editingCatId) r.category=newId; });
+      if (subcats[editingCatId]) { subcats[newId]=subcats[editingCatId]; delete subcats[editingCatId]; }
+      // Migrate clientTaxMap keys
+      Object.keys(clientTaxMap).forEach(k=>{
+        if (k.startsWith(editingCatId+'::')) {
+          const sub=k.slice(editingCatId.length+2);
+          clientTaxMap[newId+'::'+sub]=clientTaxMap[k];
+          delete clientTaxMap[k];
+        }
+      });
+      saveClientTaxMap();
+      saveTasks(); saveRec(); saveSubcats();
+      if (currentCatFilter===editingCatId) currentCatFilter=newId;
+    }
+    editingCatId=null;
+  } else {
+    const id = name;
+    if (categories.some(c=>c.id===id)) { alert('同じ名前のカテゴリがすでにあります'); return; }
+    categories.push({ id, name, emoji:selectedEmoji, bg:preset.bg, color:preset.color });
+  }
+
+  saveCats(); populateCatSelects();
+  updateSubcatSelect('taskSubcat', document.getElementById('taskCategory').value);
+  renderCatList(); renderCatTabs(); resetCatForm(); renderEmojiPicker(); renderColorPicker(); renderTasks();
+}
+
+function deleteCat(id) {
+  const c=getCat(id);
+  const tc=tasks.filter(t=>t.category===id).length + recurringTasks.filter(r=>r.category===id).length;
+  const msg = tc>0
+    ? `「${c.name}」を削除しますか？\n⚠ このカテゴリのタスク${tc}件は「その他」に移動します。`
+    : `「${c.name}」を削除しますか？`;
+  if (!confirm(msg)) return;
+
+  const fallback = categories.find(cc=>cc.id!==id);
+  const fid = fallback ? fallback.id : null;
+  if (fid) {
+    tasks.forEach(t=>{ if(t.category===id) t.category=fid; });
+    recurringTasks.forEach(r=>{ if(r.category===id) r.category=fid; });
+    saveTasks(); saveRec();
+  }
+  delete subcats[id]; saveSubcats();
+  // Remove clientTaxMap entries for this category
+  Object.keys(clientTaxMap).forEach(k=>{ if(k.startsWith(id+'::')) delete clientTaxMap[k]; });
+  saveClientTaxMap();
+  categories = categories.filter(c=>c.id!==id);
+  saveCats();
+  if (currentCatFilter===id) currentCatFilter='all';
+  populateCatSelects();
+  updateSubcatSelect('taskSubcat', document.getElementById('taskCategory').value);
+  renderCatList(); renderCatTabs(); renderSubcatFilterBar(); renderTasks(); renderTaxPanel();
+}
+
+// ══════════════════════════════════════════════════════
+//  Category Tabs
+// ══════════════════════════════════════════════════════
+function renderCatTabs() {
+  const tabs = document.getElementById('catTabs');
+  const allActive = currentCatFilter==='all' ? 'active' : '';
+  tabs.innerHTML = `<button class="cat-tab ${allActive}" onclick="setCatFilter('all',this)">すべて<span class="cat-count" id="catCount-all">0</span></button>`
+    + categories.map(c=>
+      `<button class="cat-tab ${currentCatFilter===c.id?'active':''}" onclick="setCatFilter('${escAttr(c.id)}',this)">${c.emoji} ${escHtml(c.name)}<span class="cat-count" id="catCount-${escHtml(c.id)}">0</span></button>`
+    ).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  Recurring helpers
+// ══════════════════════════════════════════════════════
+function getRecPeriodKey(rt) {
+  const t=new Date();
+  return rt.recType==='monthly' ? `${t.getFullYear()}-${String(t.getMonth()+1).padStart(2,'0')}` : `${t.getFullYear()}`;
+}
+function getRecNextDue(rt) {
+  const today=new Date(); today.setHours(0,0,0,0);
+  if (rt.recType==='monthly') {
+    let d=new Date(today.getFullYear(),today.getMonth(),rt.dayOfMonth);
+    if (d<today) d=new Date(today.getFullYear(),today.getMonth()+1,rt.dayOfMonth);
+    return d;
+  }
+  let d=new Date(today.getFullYear(),rt.month-1,rt.dayOfMonth);
+  if (d<today) d=new Date(today.getFullYear()+1,rt.month-1,rt.dayOfMonth);
+  return d;
+}
+function isRecDone(rt)     { return (rt.completedPeriods||[]).includes(getRecPeriodKey(rt)); }
+function toggleRecurring(id) {
+  const rt=recurringTasks.find(r=>r.id===id); if(!rt) return;
+  const key=getRecPeriodKey(rt);
+  if (!rt.completedPeriods) rt.completedPeriods=[];
+  const i=rt.completedPeriods.indexOf(key);
+  if (i>=0) rt.completedPeriods.splice(i,1); else rt.completedPeriods.push(key);
+  saveRec(); renderTasks();
+}
+function recDueLabel(rt) {
+  return rt.recType==='monthly' ? `毎月${rt.dayOfMonth}日まで` : `毎年${rt.month}月${rt.dayOfMonth}日まで`;
+}
+
+// ══════════════════════════════════════════════════════
+//  Date range
+// ══════════════════════════════════════════════════════
+function setDateRange(r,btn) {
+  currentDateRange=r;
+  document.querySelectorAll('.dr-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderTasks();
+}
+function passesRange(dueStr) {
+  if (currentDateRange==='all') return true;
+  const today=new Date(); today.setHours(0,0,0,0);
+  const due=new Date(dueStr+'T00:00:00');
+  if (currentDateRange==='2m') { const l=new Date(today); l.setMonth(l.getMonth()+2); return due<=l; }
+  const l=new Date(today); l.setFullYear(l.getFullYear()+1); return due<=l;
+}
+function passesRangeRec(rt) {
+  if (currentDateRange==='all') return true;
+  const due=getRecNextDue(rt), today=new Date(); today.setHours(0,0,0,0);
+  if (currentDateRange==='2m') { const l=new Date(today); l.setMonth(l.getMonth()+2); return due<=l; }
+  const l=new Date(today); l.setFullYear(l.getFullYear()+1); return due<=l;
+}
+
+// ══════════════════════════════════════════════════════
+//  Filters
+// ══════════════════════════════════════════════════════
+function setFilter(f,btn) {
+  currentFilter=f; document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderTasks();
+}
+function setCatFilter(cat,btn) {
+  currentCatFilter=cat; currentSubFilter='all';
+  document.querySelectorAll('.cat-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderSubcatFilterBar(); renderTasks(); renderTaxPanel();
+}
+function setSubFilter(sub,btn) {
+  currentSubFilter=sub; document.querySelectorAll('.subcat-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active'); renderTasks(); renderTaxPanel();
+}
+function renderSubcatFilterBar() {
+  const bar=document.getElementById('subcatFilterBar');
+  if (currentCatFilter==='all') { bar.innerHTML=''; return; }
+  const list=getSubcats(currentCatFilter);
+  if (!list.length) { bar.innerHTML=''; return; }
+  bar.innerHTML=`<span class="sub-label">絞り込み：</span>`
+    +`<button class="subcat-btn active" onclick="setSubFilter('all',this)">すべて</button>`
+    +list.map(s=>`<button class="subcat-btn" onclick="setSubFilter('${escAttr(s)}',this)">${escHtml(s)}</button>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  Date helpers
+// ══════════════════════════════════════════════════════
+function isOverdue(t) { if(!t.due||t.completed) return false; const d=new Date(); d.setHours(0,0,0,0); return new Date(t.due)<d; }
+function isDueSoon(t) {
+  if(!t.due||t.completed) return false;
+  const d=new Date(); d.setHours(0,0,0,0); const diff=(new Date(t.due)-d)/864e5;
+  return diff>=0&&diff<=3;
+}
+function fmtDate(s)  { if(!s) return ''; const d=new Date(s+'T00:00:00'); return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
+function fmtDateObj(d){ return `${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日`; }
+
+// ══════════════════════════════════════════════════════
+//  Card HTML
+// ══════════════════════════════════════════════════════
+function taskCardHTML(t) {
+  const ov=isOverdue(t),ds=isDueSoon(t);
+  let dc='task-date',dp='📅';
+  if(ov){dc+=' overdue';dp='⚠️';}else if(ds){dc+=' due-soon';dp='⏰';}
+  const cat=getCat(t.category);
+  const sb=t.subcat?`<span class="badge badge-subcat">📁 ${escHtml(t.subcat)}</span>`:'';
+  // タイマー関連バッジ・ボタン
+  const totalSec = (typeof getTaskTotalSeconds==='function') ? getTaskTotalSeconds(t.id) : 0;
+  const totalBadge = totalSec > 0 ? `<span class="badge badge-time">⏱️ ${fmtDuration(totalSec)}</span>` : '';
+  const isActive = activeTimer && activeTimer.taskId === t.id;
+  const timerBtn = t.completed ? '' :
+    `<button class="btn-task-timer ${isActive?'is-active':''}" onclick="onTaskTimerClick(${t.id})" title="${isActive?'計測中（クリックで停止）':'このタスクで計測開始'}">${isActive?'■ 停止':'▶ 計測'}</button>`;
+  return `
+  <div class="task-item priority-${t.priority} ${t.completed?'completed':''}">
+    <div class="task-check" onclick="toggleTask(${t.id})">${t.completed?'✓':''}</div>
+    <div class="task-body">
+      <div class="task-name" onclick="this.classList.toggle('expanded')" title="クリックで展開">${escHtml(t.name)}</div>
+      <div class="task-meta">
+        <span class="badge" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>
+        ${sb}
+        <span class="badge badge-priority-${t.priority}">優先度: ${PRI_LABEL[t.priority]}</span>
+        ${t.due?`<span class="${dc}">${dp} ${fmtDate(t.due)}${ov?' (期限超過)':ds?' (もうすぐ期限)':''}</span>`:''}
+        ${totalBadge}
+      </div>
+    </div>
+    ${timerBtn}
+    <button class="btn-edit"   onclick="openEdit(${t.id})"   title="編集">✏️</button>
+    <button class="btn-delete" onclick="deleteTask(${t.id})" title="削除">🗑️</button>
+  </div>`;
+}
+
+function recCardHTML(rt) {
+  const done=isRecDone(rt),nextDue=getRecNextDue(rt);
+  const today=new Date(); today.setHours(0,0,0,0);
+  const diff=(nextDue-today)/864e5;
+  let dc='task-date',dp='📅';
+  if(!done&&diff<0){dc+=' overdue';dp='⚠️';}else if(!done&&diff<=3){dc+=' due-soon';dp='⏰';}
+  const cat=getCat(rt.category);
+  const sb=rt.subcat?`<span class="badge badge-subcat">📁 ${escHtml(rt.subcat)}</span>`:'';
+  return `
+  <div class="task-item priority-${rt.priority} is-recurring ${done?'completed':''}">
+    <div class="task-check" onclick="toggleRecurring(${rt.id})">${done?'✓':''}</div>
+    <div class="task-body">
+      <div class="task-name" onclick="this.classList.toggle('expanded')" title="クリックで展開">${escHtml(rt.name)}</div>
+      <div class="task-meta">
+        <span class="badge badge-rec">🔄 ${rt.recType==='monthly'?'毎月':'毎年'}</span>
+        <span class="badge" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>
+        ${sb}
+        <span class="badge badge-priority-${rt.priority}">優先度: ${PRI_LABEL[rt.priority]}</span>
+        <span class="${dc}">${dp} ${fmtDateObj(nextDue)}まで</span>
+      </div>
+    </div>
+    <button class="btn-delete" onclick="deleteRec(${rt.id})" title="削除">🗑️</button>
+  </div>`;
+}
+
+function sortTasks(arr) {
+  return arr.slice().sort((a,b)=>{
+    if(a.completed!==b.completed) return a.completed?1:-1;
+    if(PRI_ORDER[a.priority]!==PRI_ORDER[b.priority]) return PRI_ORDER[a.priority]-PRI_ORDER[b.priority];
+    if(a.due&&b.due) return new Date(a.due)-new Date(b.due);
+    if(a.due) return -1; if(b.due) return 1; return 0;
+  });
+}
+
+// ══════════════════════════════════════════════════════
+//  Render Tasks
+// ══════════════════════════════════════════════════════
+function renderTasks() {
+  const search=document.getElementById('searchInput').value.toLowerCase();
+  const showNoDue=document.getElementById('showNoDue').checked;
+
+  let base=tasks.filter(t=>{
+    if(currentFilter==='pending') return !t.completed;
+    if(currentFilter==='done')    return  t.completed;
+    if(currentFilter==='overdue') return isOverdue(t);
+    return true;
+  }).filter(t=>{
+    if(!t.due) return showNoDue;
+    return passesRange(t.due);
+  }).filter(t=>t.name.toLowerCase().includes(search)||t.category.includes(search)||(t.subcat||'').toLowerCase().includes(search));
+
+  let baseRec=recurringTasks.filter(rt=>{
+    if(currentFilter==='done')    return isRecDone(rt);
+    if(currentFilter==='pending') return !isRecDone(rt);
+    if(currentFilter==='overdue'){const d=getRecNextDue(rt);const now=new Date();now.setHours(0,0,0,0);return !isRecDone(rt)&&d<now;}
+    return true;
+  }).filter(rt=>passesRangeRec(rt)).filter(rt=>rt.name.toLowerCase().includes(search)||rt.category.includes(search));
+
+  // ── カテゴリ/サブカテゴリフィルター適用前にカウントを計算（タブ表示用）
+  const baseForCount    = base.slice();
+  const baseRecForCount = baseRec.slice();
+  const countEl=document.getElementById('catCount-all');
+  if(countEl) countEl.textContent=baseForCount.length+baseRecForCount.length;
+  categories.forEach(c=>{
+    const el=document.getElementById('catCount-'+c.id);
+    if(el) el.textContent=baseForCount.filter(t=>t.category===c.id).length+baseRecForCount.filter(r=>r.category===c.id).length;
+  });
+
+  // ── カテゴリ/サブカテゴリフィルター適用（表示用）
+  if(currentCatFilter!=='all'){base=base.filter(t=>t.category===currentCatFilter);baseRec=baseRec.filter(r=>r.category===currentCatFilter);}
+  if(currentSubFilter!=='all'){base=base.filter(t=>t.subcat===currentSubFilter);baseRec=baseRec.filter(r=>r.subcat===currentSubFilter);}
+
+  const listEl=document.getElementById('taskList');
+
+  if(currentCatFilter==='all'){
+    let html='',any=false;
+    if(baseRec.length){any=true;html+=`<div class="category-section"><div class="rec-section-header"><h3>🔄 繰り返しタスク</h3></div><div class="task-list">${baseRec.map(recCardHTML).join('')}</div></div>`;}
+    categories.forEach(c=>{
+      const ct=base.filter(t=>t.category===c.id);
+      if(!ct.length) return; any=true;
+      html+=`<div class="category-section">
+        <div class="category-section-header">
+          <h3>${c.emoji} ${escHtml(c.name)}</h3>
+          <span class="badge" style="background:${c.bg};color:${c.color}">${ct.length}件</span>
+        </div>
+        ${buildInner(ct,c.id)}
+      </div>`;
+    });
+    listEl.innerHTML=any?html:emptyHTML();
+  } else {
+    const recH=baseRec.length?`<div class="category-section"><div class="rec-section-header"><h3>🔄 繰り返しタスク</h3></div><div class="task-list">${baseRec.map(recCardHTML).join('')}</div></div>`:'';
+    const taskH=base.length?buildInner(base,currentCatFilter):'';
+    listEl.innerHTML=(recH||taskH)?recH+taskH:emptyHTML();
+  }
+
+  const done   =tasks.filter(t=>t.completed).length;
+  const pending=tasks.filter(t=>!t.completed).length+recurringTasks.filter(r=>!isRecDone(r)).length;
+  const ov     =tasks.filter(t=>isOverdue(t)).length;
+  document.getElementById('statTotal').textContent  =pending;
+  document.getElementById('statDone').textContent   =done;
+  document.getElementById('statOverdue').textContent=ov;
+}
+
+function buildInner(catTasks,catId){
+  const sl=getSubcats(catId);
+  if(!sl.length) return `<div class="task-list">${sortTasks(catTasks).map(taskCardHTML).join('')}</div>`;
+  let h='';
+  sl.forEach(sub=>{const st=sortTasks(catTasks.filter(t=>t.subcat===sub));if(!st.length)return;h+=`<div class="subcat-section"><div class="subcat-section-header">${escHtml(sub)}</div><div class="task-list">${st.map(taskCardHTML).join('')}</div></div>`;});
+  const ns=sortTasks(catTasks.filter(t=>!t.subcat));
+  if(ns.length) h+=`<div class="subcat-section"><div class="subcat-section-header">未分類</div><div class="task-list">${ns.map(taskCardHTML).join('')}</div></div>`;
+  return h||`<div class="task-list">${sortTasks(catTasks).map(taskCardHTML).join('')}</div>`;
+}
+function emptyHTML(){return`<div class="empty-state"><div class="emoji">✅</div><p>タスクはありません</p></div>`;}
+
+// ══════════════════════════════════════════════════════
+//  Add / Toggle / Delete task
+// ══════════════════════════════════════════════════════
+function addTask(){
+  const name=document.getElementById('taskName').value.trim();
+  if(!name){flash('taskName');return;}
+  tasks.unshift({id:Date.now(),name,due:document.getElementById('taskDue').value,
+    priority:document.getElementById('taskPriority').value,
+    category:document.getElementById('taskCategory').value,
+    subcat:document.getElementById('taskSubcat').value,
+    completed:false,createdAt:new Date().toISOString()});
+  saveTasks();
+  document.getElementById('taskName').value='';document.getElementById('taskDue').value='';
+  renderTasks();
+}
+function toggleTask(id){const t=tasks.find(t=>t.id===id);if(t){t.completed=!t.completed;saveTasks();renderTasks();}}
+function deleteTask(id){tasks=tasks.filter(t=>t.id!==id);saveTasks();renderTasks();}
+
+// ══════════════════════════════════════════════════════
+//  Edit Task Modal
+// ══════════════════════════════════════════════════════
+function openEdit(id){
+  const t=tasks.find(t=>t.id===id);if(!t)return;
+  document.getElementById('editId').value=id;
+  document.getElementById('editName').value=t.name;
+  document.getElementById('editDue').value=t.due||'';
+  document.getElementById('editPriority').value=t.priority;
+  document.getElementById('editCategory').value=t.category;
+  updateSubcatSelect('editSubcat',t.category);
+  document.getElementById('editSubcat').value=t.subcat||'';
+  document.getElementById('editModal').classList.add('open');
+  setTimeout(()=>document.getElementById('editName').focus(),100);
+}
+function saveEdit(){
+  const id=Number(document.getElementById('editId').value);
+  const name=document.getElementById('editName').value.trim();
+  if(!name){flash('editName');return;}
+  const t=tasks.find(t=>t.id===id);
+  if(t){t.name=name;t.due=document.getElementById('editDue').value;t.priority=document.getElementById('editPriority').value;t.category=document.getElementById('editCategory').value;t.subcat=document.getElementById('editSubcat').value;saveTasks();renderTasks();}
+  closeModal('editModal');
+}
+
+// ══════════════════════════════════════════════════════
+//  Recurring Manager
+// ══════════════════════════════════════════════════════
+function openRecManager(){
+  renderRecList();
+  const catSel=document.getElementById('recCategory');
+  if(catSel) updateSubcatSelect('recSubcat',catSel.value);
+  document.getElementById('recModal').classList.add('open');
+  setTimeout(()=>document.getElementById('recName').focus(),100);
+}
+function toggleRecFields(){
+  const m=document.getElementById('recType').value==='monthly';
+  document.getElementById('recDayWrap').style.display    =m?'':'none';
+  document.getElementById('recMonthWrap').style.display  =m?'none':'';
+  document.getElementById('recYearDayWrap').style.display=m?'none':'';
+}
+function addRecurring(){
+  const name=document.getElementById('recName').value.trim();
+  if(!name){flash('recName');return;}
+  const rt=document.getElementById('recType').value;
+  recurringTasks.push({
+    id:Date.now(),name,recType:rt,
+    dayOfMonth:rt==='monthly'?Number(document.getElementById('recDay').value):Number(document.getElementById('recYearDay').value),
+    month:rt==='yearly'?Number(document.getElementById('recMonth').value):null,
+    priority:document.getElementById('recPriority').value,
+    category:document.getElementById('recCategory').value,
+    subcat:document.getElementById('recSubcat').value,
+    completedPeriods:[]
+  });
+  saveRec();document.getElementById('recName').value='';renderRecList();renderTasks();
+}
+function deleteRec(id){if(!confirm('この繰り返しタスクを削除しますか？'))return;recurringTasks=recurringTasks.filter(r=>r.id!==id);saveRec();renderRecList();renderTasks();}
+function renderRecList(){
+  const el=document.getElementById('recList');
+  if(!recurringTasks.length){el.innerHTML=`<div class="empty-rec">まだ繰り返しタスクはありません</div>`;return;}
+  el.innerHTML=recurringTasks.map(rt=>`
+    <div class="rec-list-item">
+      <div class="rec-info">
+        <div class="rec-name">${escHtml(rt.name)}</div>
+        <div class="rec-meta">${recDueLabel(rt)} ／ ${rt.category}${rt.subcat?' › '+rt.subcat:''} ／ 優先度:${PRI_LABEL[rt.priority]}</div>
+      </div>
+      <button onclick="deleteRec(${rt.id})">🗑️</button>
+    </div>`).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  Subcat Manager
+// ══════════════════════════════════════════════════════
+function openSubcatManager(){
+  managerCat=categories[0]?.id||null;
+  renderSubcatManagerCats();renderSubcatManagerList();
+  document.getElementById('subcatModal').classList.add('open');
+  setTimeout(()=>document.getElementById('newSubcatInput').focus(),100);
+}
+function renderSubcatManagerCats(){
+  document.getElementById('subcatCatSelector').innerHTML=categories.map(c=>
+    `<button class="cat-select-btn ${c.id===managerCat?'active':''}" onclick="selectManagerCat('${escAttr(c.id)}')">${c.emoji} ${escHtml(c.name)}</button>`
+  ).join('');
+}
+function selectManagerCat(cat){managerCat=cat;renderSubcatManagerCats();renderSubcatManagerList();document.getElementById('newSubcatInput').value='';document.getElementById('newSubcatInput').focus();}
+function renderSubcatManagerList(){
+  const el=document.getElementById('subcatList');
+  const list=getSubcats(managerCat);
+  if(!list.length){el.innerHTML=`<div class="empty-subcat">まだサブカテゴリがありません</div>`;return;}
+  el.innerHTML=list.map((s,i)=>`<div class="subcat-list-item"><span>${escHtml(s)}</span><button onclick="deleteSubcat(${i})">🗑️</button></div>`).join('');
+}
+function addSubcat(){
+  const val=document.getElementById('newSubcatInput').value.trim();if(!val)return;
+  if(!subcats[managerCat])subcats[managerCat]=[];
+  if(subcats[managerCat].includes(val)){alert('同じ名前のサブカテゴリがすでにあります');return;}
+  subcats[managerCat].push(val);saveSubcats();
+  document.getElementById('newSubcatInput').value='';
+  renderSubcatManagerList();renderSubcatFilterBar();
+  updateSubcatSelect('taskSubcat',document.getElementById('taskCategory').value);renderTasks();renderTaxPanel();
+}
+function deleteSubcat(i){
+  const sub=subcats[managerCat][i];
+  if(!confirm(`「${sub}」を削除しますか？`))return;
+  tasks.forEach(t=>{if(t.category===managerCat&&t.subcat===sub)t.subcat='';});
+  saveTasks();
+  // Remove from clientTaxMap
+  const key=managerCat+'::'+sub;
+  delete clientTaxMap[key];
+  saveClientTaxMap();
+  subcats[managerCat].splice(i,1);saveSubcats();
+  renderSubcatManagerList();renderSubcatFilterBar();
+  updateSubcatSelect('taskSubcat',document.getElementById('taskCategory').value);renderTasks();renderTaxPanel();
+}
+
+// ══════════════════════════════════════════════════════
+//  Tax Calendar Panel
+// ══════════════════════════════════════════════════════
+function toggleTaxPanel() {
+  taxPanelOpen = !taxPanelOpen;
+  document.getElementById('taxPanelBody').classList.toggle('open', taxPanelOpen);
+  document.getElementById('taxPanelHdr').classList.toggle('open', taxPanelOpen);
+  document.getElementById('taxArrow').style.transform = taxPanelOpen ? '' : 'rotate(-90deg)';
+}
+
+function getAllClients() {
+  const clients = [];
+  categories.forEach(cat => {
+    const subs = getSubcats(cat.id);
+    subs.forEach(sub => {
+      clients.push({ key:`${cat.id}::${sub}`, catId:cat.id, catName:cat.name, catEmoji:cat.emoji, sub });
+    });
+  });
+  return clients;
+}
+
+function getTaxOccurrences(te, windowDays) {
+  const today = new Date(); today.setHours(0,0,0,0);
+  const lookback  = new Date(today); lookback.setDate(lookback.getDate() - 10); // 10日前まで（期限超過表示）
+  const lookahead = new Date(today); lookahead.setDate(lookahead.getDate() + windowDays);
+  const results = [];
+  if (te.recType === 'monthly') {
+    // 最大16ヶ月分チェック（1年対応）
+    for (let m = -1; m <= 16; m++) {
+      const d = new Date(today.getFullYear(), today.getMonth() + m, te.dayOfMonth);
+      if (d >= lookback && d <= lookahead) results.push(new Date(d));
+    }
+  } else {
+    // 前年〜再来年をチェック
+    for (let y = today.getFullYear() - 1; y <= today.getFullYear() + 2; y++) {
+      const d = new Date(y, te.month - 1, te.dayOfMonth);
+      if (d >= lookback && d <= lookahead) results.push(new Date(d));
+    }
+  }
+  return results;
+}
+
+// クライアントバッジ（多い場合は折りたたみ）
+function taxClientBadges(clients) {
+  if (!clients.length) return '';
+  const MAX = 1; // 最初に表示するバッジ数
+  if (clients.length <= MAX + 1) {
+    return clients.map(c => `<span class="te-client-badge">${escHtml(c.sub)}</span>`).join('');
+  }
+  const first = clients.slice(0, MAX).map(c => `<span class="te-client-badge">${escHtml(c.sub)}</span>`).join('');
+  const rest  = clients.slice(MAX).map(c => `<span class="te-client-badge">${escHtml(c.sub)}</span>`).join('');
+  const more  = clients.length - MAX;
+  return first
+    + `<button class="te-badge-more" onclick="toggleTaxBadgeExpand(this,${more})">+${more}件</button>`
+    + `<span class="te-clients-rest">${rest}</span>`;
+}
+function toggleTaxBadgeExpand(btn, total) {
+  const rest = btn.nextElementSibling;
+  if (!rest) return;
+  const hidden = rest.style.display === 'none' || rest.style.display === '';
+  rest.style.display = hidden ? 'flex' : 'none';
+  btn.textContent    = hidden ? '閉じる' : `+${total}件`;
+}
+
+function setTaxWindow(days, btn) {
+  taxPanelWindow = days;
+  document.querySelectorAll('.tax-win-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTaxPanel();
+}
+
+function renderTaxPanel() {
+  const body = document.getElementById('taxPanelBody');
+  if (!body) return;
+  const subtitle = document.getElementById('taxSubtitle');
+  const today = new Date(); today.setHours(0,0,0,0);
+  const DOW = ['日','月','火','水','木','金','土'];
+
+  let clientFilter = null;
+  if (currentSubFilter !== 'all' && currentCatFilter !== 'all') {
+    clientFilter = `${currentCatFilter}::${currentSubFilter}`;
+    if (subtitle) subtitle.textContent = `（${currentSubFilter} のみ）`;
+  } else {
+    if (subtitle) subtitle.textContent = '';
+  }
+
+  const allClients = getAllClients();
+  const rows = [];
+
+  taxEventTypes.forEach(te => {
+    const dates = getTaxOccurrences(te, taxPanelWindow);
+    dates.forEach(date => {
+      let applicableClients;
+      if (clientFilter) {
+        const assigned = clientTaxMap[clientFilter] || [];
+        if (!assigned.includes(te.id)) return;
+        applicableClients = [allClients.find(c => c.key === clientFilter)].filter(Boolean);
+      } else {
+        applicableClients = allClients.filter(c => (clientTaxMap[c.key] || []).includes(te.id));
+      }
+      rows.push({ te, date, clients: applicableClients });
+    });
+  });
+
+  rows.sort((a, b) => a.date - b.date || a.te.name.localeCompare(b.te.name));
+
+  if (!rows.length) {
+    body.innerHTML = `<div class="tax-empty">📭 表示できる税務イベントがありません<br><small>「⚙️ 税務設定」→「クライアント別設定」でイベントを割り当ててください</small></div>`;
+    return;
+  }
+
+  body.innerHTML = rows.map(({te, date, clients}) => {
+    const diff = (date - today) / 864e5;
+    let rowCls = '', dateCls = '';
+    if (diff < 0)       { rowCls = 'te-ov'; dateCls = 'ov'; }
+    else if (diff <= 7) { rowCls = 'te-so'; dateCls = 'so'; }
+    const ds = `${date.getMonth()+1}月${date.getDate()}日(${DOW[date.getDay()]})`;
+    const overdueTag = diff < 0 ? `<span style="font-size:0.68rem;color:#e53e3e;font-weight:700;margin-left:4px">期限超過</span>` : '';
+    const badges = taxClientBadges(clients);
+    const noteHtml = te.note ? `<div class="te-note-small">${escHtml(te.note)}</div>` : '';
+    return `<div class="tax-event-row ${rowCls}">
+      <div class="te-ev-name">${escHtml(te.name)}</div>
+      ${noteHtml}
+      <div class="te-row-bottom">
+        <div class="te-date ${dateCls}">${ds}${overdueTag}</div>
+        <div class="te-clients">${badges}</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════════════
+//  Tax Settings Modal
+// ══════════════════════════════════════════════════════
+function openTaxSettings() {
+  taxActiveTab = 'events';
+  document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === 'events'));
+  renderTaxModalBody();
+  document.getElementById('taxModal').classList.add('open');
+}
+
+function switchTaxTab(tab) {
+  taxActiveTab = tab;
+  document.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  renderTaxModalBody();
+}
+
+function renderTaxModalBody() {
+  const body = document.getElementById('taxModalBody');
+  if (taxActiveTab === 'events') renderTaxEventsTab(body);
+  else renderTaxAssignTab(body);
+}
+
+function renderTaxEventsTab(container) {
+  const listHtml = taxEventTypes.length
+    ? taxEventTypes.map(te => {
+        const rl = te.recType === 'monthly' ? `毎月${te.dayOfMonth}日` : `毎年${te.month}月${te.dayOfMonth}日`;
+        return `<div class="tax-ev-item">
+          <div class="tax-ev-info">
+            <div class="tax-ev-item-name">${escHtml(te.name)}</div>
+            <div class="tax-ev-item-meta">${rl}${te.note?' ／ '+escHtml(te.note):''}</div>
+          </div>
+          <button onclick="deleteTaxEvent('${escAttr(te.id)}')" title="削除">🗑️</button>
+        </div>`;
+      }).join('')
+    : '<div class="tax-empty">税務イベントがありません</div>';
+
+  container.innerHTML = `
+    <div class="tax-ev-list">${listHtml}</div>
+    <div class="tax-add-box">
+      <h3>＋ 税務イベントを追加</h3>
+      <div class="form-group" style="margin-bottom:10px">
+        <label>イベント名</label>
+        <input type="text" id="taxEvName" placeholder="例：住民税 第3期" />
+      </div>
+      <div class="form-row" style="gap:9px;margin-bottom:10px">
+        <div class="form-group w-auto">
+          <label>繰り返し</label>
+          <select id="taxEvType" onchange="toggleTaxEvFields()">
+            <option value="monthly">毎月</option>
+            <option value="yearly">毎年</option>
+          </select>
+        </div>
+        <div class="form-group w-auto" id="taxEvMonthWrap" style="display:none">
+          <label>月</label>
+          <select id="taxEvMonth">
+            ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}">${m}月</option>`).join('')}
+          </select>
+        </div>
+        <div class="form-group w-auto">
+          <label>日</label>
+          <input type="number" id="taxEvDay" min="1" max="31" value="10" style="width:72px" />
+        </div>
+        <div class="form-group flex-1">
+          <label>備考（任意）</label>
+          <input type="text" id="taxEvNote" placeholder="例：〇〇の納付期限" />
+        </div>
+      </div>
+      <button class="btn-save" onclick="addTaxEvent()" style="width:100%">追加する</button>
+    </div>`;
+}
+
+function toggleTaxEvFields() {
+  const isYearly = document.getElementById('taxEvType')?.value === 'yearly';
+  const mw = document.getElementById('taxEvMonthWrap');
+  if (mw) mw.style.display = isYearly ? '' : 'none';
+}
+
+function addTaxEvent() {
+  const name = document.getElementById('taxEvName')?.value.trim();
+  if (!name) { flash('taxEvName'); return; }
+  const recType    = document.getElementById('taxEvType').value;
+  const month      = recType === 'yearly' ? Number(document.getElementById('taxEvMonth').value) : null;
+  const dayOfMonth = Number(document.getElementById('taxEvDay').value);
+  const note       = document.getElementById('taxEvNote')?.value.trim() || '';
+  taxEventTypes.push({ id:'TE'+Date.now(), name, recType, dayOfMonth, month, note });
+  saveTaxEvents();
+  renderTaxModalBody();
+  renderTaxPanel();
+}
+
+function deleteTaxEvent(id) {
+  if (!confirm('このイベントを削除しますか？\nクライアントの割り当ても解除されます。')) return;
+  taxEventTypes = taxEventTypes.filter(te => te.id !== id);
+  Object.keys(clientTaxMap).forEach(k => {
+    clientTaxMap[k] = (clientTaxMap[k] || []).filter(eid => eid !== id);
+  });
+  saveTaxEvents(); saveClientTaxMap();
+  renderTaxModalBody(); renderTaxPanel();
+}
+
+function renderTaxAssignTab(container) {
+  const allClients = getAllClients();
+  if (!allClients.length) {
+    container.innerHTML = `<div class="no-clients-msg">サブカテゴリ（クライアント）がまだ登録されていません。<br>先に「⚙️ サブカテゴリ」からクライアントを追加してください。</div>`;
+    return;
+  }
+  if (!assignClientKey || !allClients.some(c => c.key === assignClientKey)) {
+    assignClientKey = allClients[0].key;
+  }
+  const selClient = allClients.find(c => c.key === assignClientKey);
+  const assigned  = clientTaxMap[assignClientKey] || [];
+
+  const selectorHtml = allClients.map(c =>
+    `<button class="client-sel-btn ${c.key===assignClientKey?'active':''}" onclick="selectAssignClient('${escAttr(c.key)}')">${escHtml(c.catEmoji)} ${escHtml(c.sub)}</button>`
+  ).join('');
+
+  const checkListHtml = taxEventTypes.length
+    ? taxEventTypes.map(te => {
+        const rl = te.recType === 'monthly' ? `毎月${te.dayOfMonth}日` : `毎年${te.month}月${te.dayOfMonth}日`;
+        const chk = assigned.includes(te.id) ? 'checked' : '';
+        return `<label class="client-chk-item">
+          <input type="checkbox" ${chk} onchange="toggleClientTaxEvent('${escAttr(te.id)}',this.checked)" />
+          <span class="chk-label">${escHtml(te.name)}</span>
+          <span class="chk-meta">${rl}</span>
+        </label>`;
+      }).join('')
+    : '<div class="tax-empty">税務イベントがありません。先に「税務イベント一覧」タブで追加してください。</div>';
+
+  container.innerHTML = `
+    <p style="font-size:0.8rem;color:#718096;margin-bottom:10px">クライアントを選んで、適用する税務イベントにチェックを入れてください。</p>
+    <div class="client-sel-wrap">${selectorHtml}</div>
+    ${selClient ? `<div style="font-size:0.8rem;font-weight:700;color:#4a5568;margin-bottom:9px">${escHtml(selClient.catEmoji)} ${escHtml(selClient.catName)} › ${escHtml(selClient.sub)} に適用するイベント：</div>` : ''}
+    <div class="client-chk-list">${checkListHtml}</div>`;
+}
+
+function selectAssignClient(key) {
+  assignClientKey = key;
+  renderTaxModalBody();
+}
+
+function toggleClientTaxEvent(eventId, checked) {
+  if (!assignClientKey) return;
+  if (!clientTaxMap[assignClientKey]) clientTaxMap[assignClientKey] = [];
+  const arr = clientTaxMap[assignClientKey];
+  const idx = arr.indexOf(eventId);
+  if (checked && idx < 0) arr.push(eventId);
+  else if (!checked && idx >= 0) arr.splice(idx, 1);
+  saveClientTaxMap();
+  renderTaxPanel();
+}
+
+// ══════════════════════════════════════════════════════
+//  Export / Import
+// ══════════════════════════════════════════════════════
+function exportJSON(){
+  const data={tasks,subcats,recurringTasks,categories,taxEventTypes,clientTaxMap,exportedAt:new Date().toISOString(),version:4};
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:'application/json'}));
+  a.download=`タスクバックアップ_${new Date().toISOString().slice(0,10)}.json`;a.click();
+}
+function importJSON(event){
+  const file=event.target.files[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=e=>{
+    try{
+      const data=JSON.parse(e.target.result);
+      if(!data.tasks||!Array.isArray(data.tasks))throw new Error();
+      const mode=confirm('【上書き】OK → 現在データを削除して復元\n【追加合体】キャンセル → 現在データに追加');
+      if(mode){
+        tasks=data.tasks;subcats=data.subcats||{};recurringTasks=data.recurringTasks||[];
+        if(data.categories&&Array.isArray(data.categories))categories=data.categories;
+        if(data.taxEventTypes&&Array.isArray(data.taxEventTypes))taxEventTypes=data.taxEventTypes;
+        if(data.clientTaxMap)clientTaxMap=data.clientTaxMap;
+      }else{
+        const ids=new Set(tasks.map(t=>t.id));
+        tasks=[...tasks,...data.tasks.filter(t=>!ids.has(t.id))];
+        if(data.subcats)Object.keys(data.subcats).forEach(cat=>{if(!subcats[cat])subcats[cat]=[];data.subcats[cat].forEach(s=>{if(!subcats[cat].includes(s))subcats[cat].push(s);});});
+        if(data.recurringTasks){const rids=new Set(recurringTasks.map(r=>r.id));recurringTasks=[...recurringTasks,...data.recurringTasks.filter(r=>!rids.has(r.id))];}
+        if(data.categories&&Array.isArray(data.categories)){data.categories.forEach(c=>{if(!categories.some(cc=>cc.id===c.id))categories.push(c);});}
+        if(data.taxEventTypes&&Array.isArray(data.taxEventTypes)){data.taxEventTypes.forEach(te=>{if(!taxEventTypes.some(e=>e.id===te.id))taxEventTypes.push(te);});}
+        if(data.clientTaxMap){Object.keys(data.clientTaxMap).forEach(k=>{if(!clientTaxMap[k])clientTaxMap[k]=[];data.clientTaxMap[k].forEach(id=>{if(!clientTaxMap[k].includes(id))clientTaxMap[k].push(id);});});}
+      }
+      saveTasks();saveSubcats();saveRec();saveCats();saveTaxEvents();saveClientTaxMap();
+      populateCatSelects();updateSubcatSelect('taskSubcat',document.getElementById('taskCategory').value);
+      renderCatTabs();renderSubcatFilterBar();renderTasks();renderTaxPanel();
+      alert(`✅ 読み込み完了！タスク数：${tasks.length}件`);
+    }catch{alert('❌ 読み込みに失敗しました。正しいバックアップファイルか確認してください。');}
+    event.target.value='';
+  };reader.readAsText(file);
+}
+function exportCSV(){
+  const bom='\uFEFF';
+  const hdr=['タスク名','カテゴリ','サブカテゴリ','優先度','締め切り日','ステータス','登録日'];
+  const rows=[
+    ...tasks.map(t=>[t.name,t.category,t.subcat||'',PRI_LABEL[t.priority]||'',t.due?fmtDate(t.due):'',t.completed?'完了':'未完了',t.createdAt?fmtDate(t.createdAt.slice(0,10)):'']),
+    ...recurringTasks.map(rt=>[rt.name,rt.category,rt.subcat||'',PRI_LABEL[rt.priority]||'',recDueLabel(rt),isRecDone(rt)?'完了(今期)':'未完了','繰り返し'])
+  ];
+  const csv=bom+[hdr,...rows].map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\r\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8;'}));
+  a.download=`タスク一覧_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+}
+
+// ══════════════════════════════════════════════════════
+//  Reset / Modal / Utils
+// ══════════════════════════════════════════════════════
+function confirmReset(){if(confirm('すべてのタスクデータを削除しますか？\nこの操作は元に戻せません。')){tasks=[];recurringTasks=[];saveTasks();saveRec();renderTasks();}}
+function closeModal(id){document.getElementById(id).classList.remove('open');}
+function closeModalOnBg(e,id){if(e.target===document.getElementById(id))closeModal(id);}
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function escAttr(s){return String(s).replace(/'/g,"\\'");}
+function flash(id){const el=document.getElementById(id);if(!el)return;el.focus();el.style.borderColor='#fc8181';setTimeout(()=>el.style.borderColor='',1500);}
+
+// Keyboard
+document.getElementById('taskName').addEventListener('keydown',e=>{if(e.key==='Enter')addTask();});
+document.getElementById('newSubcatInput').addEventListener('keydown',e=>{if(e.key==='Enter')addSubcat();});
+document.getElementById('recName').addEventListener('keydown',e=>{if(e.key==='Enter')addRecurring();});
+document.getElementById('catNameInput').addEventListener('keydown',e=>{if(e.key==='Enter')saveCat();});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){closeModal('editModal');closeModal('subcatModal');closeModal('recModal');closeModal('catModal');closeModal('taxModal');closeModal('intgModal');}
+  if(e.key==='Enter'&&document.getElementById('editModal').classList.contains('open'))saveEdit();
+});
+
+// ══════════════════════════════════════════════════════════════════════
+//  ⏱  業務タイマー機能（v3 追加機能）
+// ══════════════════════════════════════════════════════════════════════
+
+let timeEntries = JSON.parse(localStorage.getItem('timeEntries') || '[]');
+let activeTimer = JSON.parse(localStorage.getItem('activeTimer') || 'null');
+let timerView = 'today';   // 'today' | 'week' | 'month' | 'all'
+let _timerTickHandle = null;
+
+function saveTimeEntries(){ localStorage.setItem('timeEntries', JSON.stringify(timeEntries)); }
+function saveActiveTimer(){
+  if (activeTimer) localStorage.setItem('activeTimer', JSON.stringify(activeTimer));
+  else             localStorage.removeItem('activeTimer');
+}
+
+// ── ユーティリティ ──────────────────────────────────────────────────
+function fmtDuration(totalSec) {
+  totalSec = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  const s = totalSec % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+  return `${m}:${String(s).padStart(2,'0')}`;
+}
+function fmtHm(totalSec) {
+  totalSec = Math.max(0, Math.floor(totalSec));
+  const h = Math.floor(totalSec / 3600);
+  const m = Math.floor((totalSec % 3600) / 60);
+  if (h === 0) return `${m}分`;
+  return `${h}時間${m}分`;
+}
+function fmtClockTime(iso) {
+  const d = new Date(iso);
+  return `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+}
+function fmtShortDate(iso) {
+  const d = new Date(iso);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+
+function getTaskTotalSeconds(taskId) {
+  let total = 0;
+  for (const e of timeEntries) {
+    if (e.taskId === taskId) total += e.seconds || 0;
+  }
+  if (activeTimer && activeTimer.taskId === taskId) {
+    total += Math.floor((Date.now() - new Date(activeTimer.startTime).getTime()) / 1000);
+  }
+  return total;
+}
+
+// ── 計測開始・停止 ──────────────────────────────────────────────────
+function startTimer(opts) {
+  // opts: { taskId?, category?, subcat?, name?, memo? }
+  if (activeTimer) {
+    if (!confirm('既に計測中の業務があります。\n停止して新しい計測を始めますか？')) return;
+    stopTimer(/*silent*/true);
+  }
+  let taskId   = opts.taskId   || null;
+  let name     = opts.name     || '';
+  let category = opts.category || '';
+  let subcat   = opts.subcat   || '';
+
+  if (taskId) {
+    const t = tasks.find(x => x.id === taskId);
+    if (t) {
+      name     = t.name;
+      category = t.category;
+      subcat   = t.subcat || '';
+    }
+  }
+
+  activeTimer = {
+    id: Date.now(),
+    taskId,
+    name,
+    category,
+    subcat,
+    memo: opts.memo || '',
+    startTime: new Date().toISOString(),
+  };
+  saveActiveTimer();
+  renderTimer();
+  renderTasks();
+  startTimerTick();
+}
+
+function stopTimer(silent) {
+  if (!activeTimer) return;
+  const start = new Date(activeTimer.startTime).getTime();
+  const end   = Date.now();
+  const sec   = Math.max(1, Math.floor((end - start) / 1000));
+
+  // メモを最新状態で取り込む
+  const memoEl = document.getElementById('timerRunningMemo');
+  if (memoEl) activeTimer.memo = memoEl.value;
+
+  timeEntries.push({
+    id:        activeTimer.id,
+    taskId:    activeTimer.taskId,
+    name:      activeTimer.name,
+    category:  activeTimer.category,
+    subcat:    activeTimer.subcat,
+    memo:      activeTimer.memo || '',
+    startTime: activeTimer.startTime,
+    endTime:   new Date(end).toISOString(),
+    seconds:   sec,
+  });
+  activeTimer = null;
+  saveActiveTimer();
+  saveTimeEntries();
+  stopTimerTick();
+  renderTimer();
+  renderTasks();
+  if (!silent) {
+    // PWA起動時はフィードバックがあった方が安心
+    try { if (navigator.vibrate) navigator.vibrate(60); } catch(_){}
+  }
+}
+
+function onTaskTimerClick(taskId) {
+  if (activeTimer && activeTimer.taskId === taskId) {
+    stopTimer();
+  } else {
+    startTimer({ taskId });
+  }
+}
+
+function startStandaloneTimer() {
+  const cat   = document.getElementById('timerStartCat').value;
+  const sub   = document.getElementById('timerStartSubcat').value;
+  const name  = document.getElementById('timerStartName').value.trim();
+  const memo  = document.getElementById('timerStartMemo').value.trim();
+  if (!name && !cat) {
+    alert('業務内容かカテゴリを入力してください。');
+    return;
+  }
+  startTimer({ name: name || '（業務名未入力）', category: cat, subcat: sub, memo });
+}
+
+// ── 1秒毎更新 ──────────────────────────────────────────────────────
+function startTimerTick() {
+  stopTimerTick();
+  _timerTickHandle = setInterval(updateTimerTick, 1000);
+}
+function stopTimerTick() {
+  if (_timerTickHandle) { clearInterval(_timerTickHandle); _timerTickHandle = null; }
+}
+function updateTimerTick() {
+  if (!activeTimer) { stopTimerTick(); return; }
+  const sec = Math.floor((Date.now() - new Date(activeTimer.startTime).getTime()) / 1000);
+  const elapsedEl = document.getElementById('timerElapsed');
+  if (elapsedEl) elapsedEl.textContent = fmtDuration(sec);
+  const headerEl = document.getElementById('headerTimerLabel');
+  if (headerEl) headerEl.textContent = fmtDuration(sec);
+}
+
+// ── レンダリング ────────────────────────────────────────────────────
+function renderTimer() {
+  const card = document.getElementById('timerCard');
+  const area = document.getElementById('timerActiveArea');
+  const headerBadge = document.getElementById('headerTimerBadge');
+
+  if (activeTimer) {
+    const cat = getCat(activeTimer.category) || {emoji:'',name:'未分類',bg:'#edf2f7',color:'#718096'};
+    const subText = activeTimer.subcat ? ` / ${escHtml(activeTimer.subcat)}` : '';
+    const taskHint = activeTimer.taskId ? '<span class="badge badge-time" style="margin-left:6px">📋 タスク連動</span>' : '';
+    area.innerHTML = `
+      <div class="timer-running">
+        <div class="timer-running-top">
+          <div class="timer-elapsed" id="timerElapsed">${fmtDuration(0)}</div>
+          <div class="timer-target">
+            <div class="timer-target-name">${escHtml(activeTimer.name || '（業務名未入力）')}</div>
+            <div class="timer-target-meta">
+              <span class="badge" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>${subText}${taskHint}
+              <span style="margin-left:8px;color:#a0aec0">${fmtClockTime(activeTimer.startTime)} 開始</span>
+            </div>
+          </div>
+          <button class="btn-timer-stop" onclick="stopTimer()">■ ストップ</button>
+        </div>
+        <div class="timer-running-memo">
+          <input type="text" id="timerRunningMemo" placeholder="メモ（後で履歴に残ります）" value="${escHtml(activeTimer.memo||'')}" oninput="onTimerMemoInput(this.value)" />
+        </div>
+      </div>
+    `;
+    card.classList.add('is-running');
+    headerBadge.classList.add('show');
+    updateTimerTick();
+    startTimerTick();
+  } else {
+    area.innerHTML = renderTimerStartForm();
+    card.classList.remove('is-running');
+    headerBadge.classList.remove('show');
+    stopTimerTick();
+  }
+
+  renderTimerSummary();
+  renderTimerHistory();
+}
+
+function renderTimerStartForm() {
+  const catOpts = categories.map(c => `<option value="${c.id}">${c.emoji} ${escHtml(c.name)}</option>`).join('');
+  return `
+    <div class="timer-start-form">
+      <div class="timer-start-row">
+        <div class="form-group flex-1">
+          <label>業務内容</label>
+          <input type="text" id="timerStartName" placeholder="例：A社 月次記帳" />
+        </div>
+        <div class="form-group w-auto">
+          <label>カテゴリ（クライアント）</label>
+          <select id="timerStartCat" onchange="updateSubcatSelect('timerStartSubcat',this.value)">${catOpts}</select>
+        </div>
+        <div class="form-group w-auto">
+          <label>サブカテゴリ</label>
+          <select id="timerStartSubcat"></select>
+        </div>
+        <div class="form-group w-auto">
+          <label>&nbsp;</label>
+          <button class="btn-timer-start" onclick="startStandaloneTimer()">▶ スタート</button>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>メモ（任意）</label>
+        <input type="text" id="timerStartMemo" placeholder="例：4月分の仕訳入力" />
+      </div>
+      <div class="timer-hint">💡 上記フォームから始めるか、下のタスク一覧で「▶ 計測」を押してタスク連動で計測することもできます。</div>
+    </div>
+  `;
+}
+
+function onTimerMemoInput(v) {
+  if (activeTimer) {
+    activeTimer.memo = v;
+    saveActiveTimer();
+  }
+}
+
+// 表示期間切り替え
+function setTimerView(v, btn) {
+  timerView = v;
+  document.querySelectorAll('.timer-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderTimerSummary();
+  renderTimerHistory();
+}
+
+function getViewRange() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  if (timerView === 'today') {
+    return { from: today, to: new Date(today.getTime() + 86400000) };
+  }
+  if (timerView === 'week') {
+    const dow = today.getDay();
+    const monday = new Date(today.getTime() - ((dow + 6) % 7) * 86400000);
+    return { from: monday, to: new Date(monday.getTime() + 7 * 86400000) };
+  }
+  if (timerView === 'month') {
+    const from = new Date(now.getFullYear(), now.getMonth(), 1);
+    const to   = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+    return { from, to };
+  }
+  return { from: new Date(0), to: new Date(8e15) };
+}
+
+function getEntriesInView() {
+  const { from, to } = getViewRange();
+  return timeEntries.filter(e => {
+    const t = new Date(e.startTime).getTime();
+    return t >= from.getTime() && t < to.getTime();
+  }).sort((a, b) => new Date(b.startTime) - new Date(a.startTime));
+}
+
+function renderTimerSummary() {
+  const entries = getEntriesInView();
+  const sumEl = document.getElementById('timerSummary');
+
+  // ── サブカテゴリ別集計（カテゴリも文脈として保持） ──
+  const groups = {};   // key = "cat||sub" → { sec, cat, sub }
+  const byCat  = {};   // 親カテゴリ別の合計（小計用）
+  let total    = 0;
+  for (const e of entries) {
+    const cat = e.category || '';
+    const sub = e.subcat   || '';
+    const key = cat + '||' + sub;
+    if (!groups[key]) groups[key] = { sec: 0, cat, sub };
+    groups[key].sec += e.seconds || 0;
+    byCat[cat] = (byCat[cat] || 0) + (e.seconds || 0);
+    total += e.seconds || 0;
+  }
+
+  if (total === 0) {
+    sumEl.innerHTML = `<div class="timer-summary-item">この期間の計測記録はありません</div>`;
+    return;
+  }
+
+  // ── サブカテゴリ単位（時間降順）のリストを構築 ──
+  const items = Object.values(groups)
+    .sort((a, b) => b.sec - a.sec)
+    .map(g => {
+      const c = (g.cat && getCat(g.cat)) || {emoji:'📌', name:'未分類', bg:'#edf2f7', color:'#718096'};
+      const subLabel = g.sub || '（サブカテゴリ未設定）';
+      return `<div class="timer-summary-item" onclick="filterBySubcat('${escAttr(g.cat)}','${escAttr(g.sub)}')" title="クリックでこのサブカテゴリの履歴のみ表示">
+        <span class="ts-sub">📁 ${escHtml(subLabel)}</span>
+        <span class="ts-cat-tag" style="background:${c.bg};color:${c.color}">${c.emoji} ${escHtml(c.name)}</span>
+        <span class="ts-time">${fmtHm(g.sec)}</span>
+      </div>`;
+    }).join('');
+
+  // ── 親カテゴリ別の小計（補助情報・コンパクト表示） ──
+  const catItems = Object.entries(byCat)
+    .sort((a, b) => b[1] - a[1])
+    .map(([k, sec]) => {
+      const c = (k && getCat(k)) || {emoji:'📌', name:'未分類', bg:'#edf2f7', color:'#718096'};
+      return `<span class="timer-cat-chip" style="background:${c.bg};color:${c.color}">${c.emoji} ${escHtml(c.name)} <b>${fmtHm(sec)}</b></span>`;
+    }).join('');
+
+  sumEl.innerHTML = `
+    <div class="timer-summary-item timer-summary-total">
+      <span class="ts-cat">合計</span><span class="ts-time">${fmtHm(total)}</span>
+    </div>
+    ${items}
+    ${catItems ? `<div class="timer-cat-chips"><span class="timer-cat-chips-label">カテゴリ小計：</span>${catItems}</div>` : ''}
+  `;
+}
+
+// サブカテゴリをクリックすると履歴を絞り込む
+let _historyFilter = null;  // {cat, sub} or null
+function filterBySubcat(cat, sub) {
+  if (_historyFilter && _historyFilter.cat === cat && _historyFilter.sub === sub) {
+    _historyFilter = null; // 同じものをもう一度クリック → 解除
+  } else {
+    _historyFilter = { cat, sub };
+  }
+  renderTimerHistory();
+  // 視覚フィードバック
+  document.querySelectorAll('.timer-summary-item').forEach(el => el.classList.remove('is-filtered'));
+  if (_historyFilter) {
+    document.querySelectorAll('.timer-summary-item').forEach(el => {
+      if (el.getAttribute('onclick') && el.getAttribute('onclick').includes(`'${cat}','${sub}'`)) {
+        el.classList.add('is-filtered');
+      }
+    });
+  }
+}
+
+function renderTimerHistory() {
+  let entries = getEntriesInView();
+  // サブカテゴリフィルタ適用
+  if (_historyFilter) {
+    entries = entries.filter(e =>
+      (e.category || '') === _historyFilter.cat &&
+      (e.subcat   || '') === _historyFilter.sub
+    );
+  }
+  const histEl = document.getElementById('timerHistory');
+  if (entries.length === 0) {
+    histEl.innerHTML = _historyFilter
+      ? `<div class="timer-history-empty">該当する記録はありません <button class="btn-clear-filter" onclick="clearHistoryFilter()">絞り込み解除</button></div>`
+      : '';
+    return;
+  }
+  const filterBar = _historyFilter
+    ? `<div class="timer-history-filter">📁 ${escHtml(_historyFilter.sub || '（サブカテゴリ未設定）')} で絞り込み中 <button class="btn-clear-filter" onclick="clearHistoryFilter()">解除</button></div>`
+    : '';
+  histEl.innerHTML = filterBar + entries.map(e => {
+    const c = (e.category && getCat(e.category)) || {emoji:'📌', name:'未分類', bg:'#edf2f7', color:'#718096'};
+    const dateStr = `${fmtShortDate(e.startTime)} ${fmtClockTime(e.startTime)}`;
+    const subTag  = e.subcat ? `<span class="te-sub">📁 ${escHtml(e.subcat)}</span>` : '';
+    return `
+      <div class="timer-entry">
+        <span class="te-date">${dateStr}</span>
+        <span class="te-name" title="${escHtml((e.name||'') + (e.memo?(' / '+e.memo):''))}">${escHtml(e.name || '（業務名なし）')}${e.memo ? ` <span style="color:#a0aec0">(${escHtml(e.memo)})</span>`:''}</span>
+        ${subTag}
+        <span class="te-cat" style="background:${c.bg};color:${c.color}">${c.emoji} ${escHtml(c.name)}</span>
+        <span class="te-dur">${fmtDuration(e.seconds || 0)}</span>
+        <span class="te-actions">
+          <button onclick="editTimeEntry(${e.id})" title="編集">✏️</button>
+          <button onclick="deleteTimeEntry(${e.id})" title="削除">🗑️</button>
+        </span>
+      </div>
+    `;
+  }).join('');
+}
+
+function clearHistoryFilter() {
+  _historyFilter = null;
+  renderTimerHistory();
+  document.querySelectorAll('.timer-summary-item').forEach(el => el.classList.remove('is-filtered'));
+}
+
+function deleteTimeEntry(id) {
+  if (!confirm('この計測記録を削除しますか？')) return;
+  timeEntries = timeEntries.filter(e => e.id !== id);
+  saveTimeEntries();
+  renderTimer();
+  renderTasks();
+  if (document.getElementById('reportModal').classList.contains('open')) renderReport();
+}
+
+// 既存記録の編集 / 新規手動追加 のモーダル起動
+function editTimeEntry(id) {
+  const e = timeEntries.find(x => x.id === id);
+  if (!e) return;
+  openTeEditModal({
+    id:        e.id,
+    isNew:     false,
+    startTime: e.startTime,
+    seconds:   e.seconds || 0,
+    category:  e.category || '',
+    subcat:    e.subcat   || '',
+    name:      e.name     || '',
+    memo:      e.memo     || '',
+    taskId:    e.taskId   || null,
+  });
+}
+
+function addManualTimeEntry() {
+  // 直前の記録を雛形にする（無ければ現在時刻）
+  const prev = timeEntries[timeEntries.length - 1] || null;
+  const now = new Date();
+  openTeEditModal({
+    id:        null,
+    isNew:     true,
+    startTime: now.toISOString(),
+    seconds:   prev ? (prev.seconds || 1800) : 1800,  // デフォルト30分
+    category:  prev ? (prev.category || '') : '',
+    subcat:    prev ? (prev.subcat   || '') : '',
+    name:      '',
+    memo:      '',
+    taskId:    null,
+  });
+}
+
+function openTeEditModal(opts) {
+  document.getElementById('teEditTitle').textContent = opts.isNew ? '➕ 工数記録の手動追加' : '✏️ 工数記録の編集';
+  document.getElementById('teEditDeleteBtn').style.display = opts.isNew ? 'none' : '';
+  document.getElementById('teEditId').value = opts.id || '';
+  document.getElementById('teEditId').setAttribute('data-isnew', opts.isNew ? '1' : '0');
+  document.getElementById('teEditId').setAttribute('data-taskid', opts.taskId || '');
+
+  const d = new Date(opts.startTime);
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2, '0');
+  const dd = String(d.getDate()).padStart(2, '0');
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mi = String(d.getMinutes()).padStart(2, '0');
+  document.getElementById('teEditDate').value = `${yyyy}-${mm}-${dd}`;
+  document.getElementById('teEditTime').value = `${hh}:${mi}`;
+  document.getElementById('teEditMinutes').value = Math.max(1, Math.round((opts.seconds || 0) / 60));
+  document.getElementById('teEditName').value = opts.name || '';
+  document.getElementById('teEditMemo').value = opts.memo || '';
+
+  // カテゴリ・サブカテゴリ プルダウン構築
+  const catSel = document.getElementById('teEditCategory');
+  catSel.innerHTML = '<option value="">（カテゴリなし）</option>' + categories.map(c => `<option value="${escAttr(c.id)}">${c.emoji} ${escHtml(c.name)}</option>`).join('');
+  catSel.value = opts.category || '';
+  updateSubcatSelect('teEditSubcat', opts.category || '');
+  const subSel = document.getElementById('teEditSubcat');
+  // updateSubcatSelectの後に設定
+  setTimeout(() => { subSel.value = opts.subcat || ''; }, 0);
+
+  document.getElementById('teEditModal').classList.add('open');
+}
+
+function saveTimeEntryEdit() {
+  const id     = document.getElementById('teEditId').value;
+  const isNew  = document.getElementById('teEditId').getAttribute('data-isnew') === '1';
+  const taskId = parseInt(document.getElementById('teEditId').getAttribute('data-taskid'), 10) || null;
+
+  const dateStr = document.getElementById('teEditDate').value;
+  const timeStr = document.getElementById('teEditTime').value || '00:00';
+  const minutes = parseInt(document.getElementById('teEditMinutes').value, 10);
+
+  if (!dateStr) { alert('日付を入力してください。'); return; }
+  if (!minutes || minutes < 1) { alert('時間（分）は1以上の数値を入力してください。'); return; }
+
+  const startISO = new Date(`${dateStr}T${timeStr}:00`).toISOString();
+  const seconds  = minutes * 60;
+  const endISO   = new Date(new Date(startISO).getTime() + seconds * 1000).toISOString();
+
+  const cat  = document.getElementById('teEditCategory').value;
+  const sub  = document.getElementById('teEditSubcat').value;
+  const name = document.getElementById('teEditName').value.trim();
+  const memo = document.getElementById('teEditMemo').value.trim();
+
+  if (isNew) {
+    timeEntries.push({
+      id:        Date.now() + Math.floor(Math.random() * 1000),
+      taskId,
+      name,
+      category:  cat,
+      subcat:    sub,
+      memo,
+      startTime: startISO,
+      endTime:   endISO,
+      seconds,
+    });
+  } else {
+    const e = timeEntries.find(x => x.id === parseInt(id, 10));
+    if (!e) { alert('記録が見つかりません。'); return; }
+    e.startTime = startISO;
+    e.endTime   = endISO;
+    e.seconds   = seconds;
+    e.category  = cat;
+    e.subcat    = sub;
+    e.name      = name;
+    e.memo      = memo;
+  }
+
+  saveTimeEntries();
+  closeModal('teEditModal');
+  renderTimer();
+  renderTasks();
+  if (document.getElementById('reportModal').classList.contains('open')) renderReport();
+}
+
+function deleteTimeEntryFromModal() {
+  const id = parseInt(document.getElementById('teEditId').value, 10);
+  if (!id) return;
+  if (!confirm('この計測記録を削除しますか？')) return;
+  timeEntries = timeEntries.filter(e => e.id !== id);
+  saveTimeEntries();
+  closeModal('teEditModal');
+  renderTimer();
+  renderTasks();
+  if (document.getElementById('reportModal').classList.contains('open')) renderReport();
+}
+
+// ── CSV出力 ────────────────────────────────────────────────────────
+function exportTimeCSV() {
+  const entries = getEntriesInView().slice().reverse(); // 古い順
+  if (entries.length === 0) { alert('出力する記録がありません。'); return; }
+
+  const esc = c => {
+    const s = String(c);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const lines = [];
+
+  // ── ① サブカテゴリ別集計 ──
+  const groups = {};
+  let total = 0;
+  for (const e of entries) {
+    const cat = e.category || '';
+    const sub = e.subcat   || '';
+    const key = cat + '||' + sub;
+    if (!groups[key]) groups[key] = { sec: 0, cat, sub };
+    groups[key].sec += e.seconds || 0;
+    total += e.seconds || 0;
+  }
+  lines.push(['【サブカテゴリ別集計】'].map(esc).join(','));
+  lines.push(['サブカテゴリ','カテゴリ','時間(分)','時間(HH:MM)'].map(esc).join(','));
+  Object.values(groups).sort((a,b)=>b.sec-a.sec).forEach(g => {
+    const cName = (g.cat && getCat(g.cat)) ? getCat(g.cat).name : '';
+    lines.push([
+      g.sub || '（サブカテゴリ未設定）',
+      cName,
+      Math.round(g.sec / 60),
+      fmtDuration(g.sec),
+    ].map(esc).join(','));
+  });
+  lines.push(['合計', '', Math.round(total/60), fmtDuration(total)].map(esc).join(','));
+  lines.push('');
+
+  // ── ② 明細（時系列） ──
+  lines.push(['【明細】'].map(esc).join(','));
+  lines.push(['日付','開始','終了','サブカテゴリ','カテゴリ','業務名','メモ','秒数','時間(HH:MM)'].map(esc).join(','));
+  for (const e of entries) {
+    const sd = new Date(e.startTime);
+    const cName = (e.category && getCat(e.category)) ? getCat(e.category).name : '';
+    const dateStr = `${sd.getFullYear()}/${String(sd.getMonth()+1).padStart(2,'0')}/${String(sd.getDate()).padStart(2,'0')}`;
+    lines.push([
+      dateStr,
+      fmtClockTime(e.startTime),
+      e.endTime ? fmtClockTime(e.endTime) : '',
+      e.subcat || '',
+      cName,
+      e.name || '',
+      e.memo || '',
+      e.seconds || 0,
+      fmtDuration(e.seconds || 0),
+    ].map(esc).join(','));
+  }
+
+  const csv = lines.join('\r\n');
+  // BOM付きUTF-8（Excel/numbers 両対応）
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  const ts = new Date().toISOString().slice(0,10).replace(/-/g,'');
+  a.download = `工数_${timerView}_${ts}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+// ── スクロール ──────────────────────────────────────────────────────
+function scrollToTimer() {
+  const el = document.getElementById('timerCard');
+  if (el) el.scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+// ── タスク削除時の連動 ─────────────────────────────────────────────
+const _origDeleteTask = deleteTask;
+deleteTask = function(id) {
+  _origDeleteTask(id);
+  // 計測中タスクを削除した場合は計測停止
+  if (activeTimer && activeTimer.taskId === id) {
+    stopTimer(/*silent*/true);
+  }
+  renderTimer();
+};
+
+// ══════════════════════════════════════════════════════════════════════
+//  🔄  データバージョン管理（Google Drive 同期の土台）
+// ══════════════════════════════════════════════════════════════════════
+// データに変更があるたびに dataVersion をbumpする。
+// Drive同期時は local.dataVersion と remote.dataVersion を比較してマージ判定。
+
+function getDataVersion() {
+  return parseInt(localStorage.getItem('dataVersion') || '0', 10);
+}
+function bumpDataVersion() {
+  const v = Date.now();
+  localStorage.setItem('dataVersion', String(v));
+  // 自動同期がONなら保存をデバウンスでキック
+  if (typeof scheduleAutoSync === 'function') scheduleAutoSync();
+}
+
+// 既存の主要保存関数をラップして bumpDataVersion を呼ばせる
+(function wrapSavers() {
+  const fns = ['saveTasks','saveSubcats','saveRec','saveCats','saveTaxEvents',
+               'saveClientTaxMap','saveClientRates','saveTimeEntries'];
+  fns.forEach(name => {
+    if (typeof window[name] === 'function') {
+      const orig = window[name];
+      window[name] = function() { const r = orig.apply(this, arguments); bumpDataVersion(); return r; };
+    }
+  });
+})();
+
+
+// ══════════════════════════════════════════════════════════════════════
+//  📊  工数レポート機能（v3 追加機能）
+// ══════════════════════════════════════════════════════════════════════
+
+let clientRates = JSON.parse(localStorage.getItem('clientRates') || '{}');
+// clientRates = { "categoryId||subcatName": { monthlyFee: 整数 }, ... }
+let _reportYear = new Date().getFullYear();
+
+function saveClientRates() { localStorage.setItem('clientRates', JSON.stringify(clientRates)); }
+function rateKey(catId, sub) { return (catId || '') + '||' + (sub || ''); }
+function getMonthlyFee(catId, sub) {
+  const r = clientRates[rateKey(catId, sub)];
+  return r && typeof r.monthlyFee === 'number' ? r.monthlyFee : 0;
+}
+// 指定月（year, monthIdx[0..11]）が課金対象か判定
+function isMonthBillable(catId, sub, year, monthIdx) {
+  const r = clientRates[rateKey(catId, sub)];
+  if (!r || !r.monthlyFee || r.monthlyFee <= 0) return false;
+  // 発生月未設定の場合は「常に課金（年内12ヶ月）」とみなす
+  if (r.startYearMonth) {
+    const [sy, sm] = r.startYearMonth.split('-').map(Number);
+    if (year < sy) return false;
+    if (year === sy && monthIdx < sm - 1) return false;
+  }
+  if (r.endYearMonth) {
+    const [ey, em] = r.endYearMonth.split('-').map(Number);
+    if (year > ey) return false;
+    if (year === ey && monthIdx > em - 1) return false;
+  }
+  return true;
+}
+// 当該年の課金月数
+function getBillableMonths(catId, sub, year) {
+  let count = 0;
+  for (let m = 0; m < 12; m++) if (isMonthBillable(catId, sub, year, m)) count++;
+  return count;
+}
+// カテゴリ単位の課金月数（配下のサブの中で1つでも課金月になっている月をカウント）
+function getCategoryBillableMonths(catId, year) {
+  let count = 0;
+  const subs = getSubcats(catId);
+  for (let m = 0; m < 12; m++) {
+    let billable = false;
+    // サブカテゴリなしも含めて考える
+    const allSubs = subs.length ? subs : [''];
+    for (const sub of allSubs) {
+      if (isMonthBillable(catId, sub, year, m)) { billable = true; break; }
+    }
+    if (billable) count++;
+  }
+  return count;
+}
+// カテゴリ単位の月額（その月に課金対象となる配下サブの月額合計）
+function getCategoryMonthlyFee(catId, year, monthIdx) {
+  let total = 0;
+  const subs = getSubcats(catId);
+  const allSubs = subs.length ? subs : [''];
+  for (const sub of allSubs) {
+    if (isMonthBillable(catId, sub, year, monthIdx)) {
+      total += getMonthlyFee(catId, sub);
+    }
+  }
+  return total;
+}
+// 全体：その月の月額合計
+function getOverallMonthlyFee(year, monthIdx) {
+  let total = 0;
+  Object.keys(clientRates).forEach(k => {
+    const [catId, sub] = k.split('||');
+    if (isMonthBillable(catId, sub, year, monthIdx)) {
+      total += clientRates[k]?.monthlyFee || 0;
+    }
+  });
+  return total;
+}
+
+// ── 集計ヘルパー ──────────────────────────────────────────────────
+function getMonthlySeconds(catId, sub, year, monthIdx) {
+  // monthIdx: 0..11
+  let total = 0;
+  for (const e of timeEntries) {
+    if ((e.category || '') !== (catId || '')) continue;
+    if ((e.subcat   || '') !== (sub   || '')) continue;
+    const d = new Date(e.startTime);
+    if (d.getFullYear() === year && d.getMonth() === monthIdx) {
+      total += e.seconds || 0;
+    }
+  }
+  return total;
+}
+
+function getCategoryMonthlySeconds(catId, year, monthIdx) {
+  let total = 0;
+  for (const e of timeEntries) {
+    if ((e.category || '') !== (catId || '')) continue;
+    const d = new Date(e.startTime);
+    if (d.getFullYear() === year && d.getMonth() === monthIdx) {
+      total += e.seconds || 0;
+    }
+  }
+  return total;
+}
+
+function getOverallMonthlySeconds(year, monthIdx) {
+  let total = 0;
+  for (const e of timeEntries) {
+    const d = new Date(e.startTime);
+    if (d.getFullYear() === year && d.getMonth() === monthIdx) {
+      total += e.seconds || 0;
+    }
+  }
+  return total;
+}
+
+// その年の有効な (catId, sub) ペアを抽出（工数 or 月額設定があるもの）
+function getActiveSubcatPairs(year) {
+  const pairSet = {};
+  // 工数記録から抽出
+  for (const e of timeEntries) {
+    const d = new Date(e.startTime);
+    if (d.getFullYear() !== year) continue;
+    const key = rateKey(e.category, e.subcat);
+    if (!pairSet[key]) pairSet[key] = { catId: e.category || '', sub: e.subcat || '' };
+  }
+  // 月額設定があるものも含める
+  Object.keys(clientRates).forEach(k => {
+    if (!pairSet[k]) {
+      const [catId, sub] = k.split('||');
+      pairSet[k] = { catId: catId || '', sub: sub || '' };
+    }
+  });
+  return Object.values(pairSet);
+}
+
+// 利用可能な年のリスト（記録のある年 + 当年 + 翌年）
+function getAvailableYears() {
+  const years = new Set();
+  const cy = new Date().getFullYear();
+  years.add(cy);
+  years.add(cy + 1);   // 翌年も常に含める（年末に来年分の月額設定を準備できる）
+  for (const e of timeEntries) {
+    const d = new Date(e.startTime);
+    years.add(d.getFullYear());
+  }
+  return [...years].sort((a, b) => b - a);
+}
+
+// ── 円フォーマット ──
+function fmtYen(n) {
+  if (n === null || n === undefined) return '';
+  return '¥' + Math.round(n).toLocaleString('ja-JP');
+}
+function fmtYenPlain(n) {
+  if (!n) return '0';
+  return Math.round(n).toLocaleString('ja-JP');
+}
+function fmtHours(sec) {
+  if (!sec) return '';
+  const h = sec / 3600;
+  if (h < 10) return h.toFixed(1) + 'h';
+  return Math.round(h) + 'h';
+}
+function rateClass(yenPerHour) {
+  if (!yenPerHour) return 'num-rate-na';
+  if (yenPerHour >= 3000) return 'num-rate-good';
+  if (yenPerHour >= 1500) return 'num-rate-mid';
+  return 'num-rate-low';
+}
+
+// ── レポートモーダル制御 ───────────────────────────────────────────
+function openReportModal() {
+  // 年セレクタ初期化
+  const sel = document.getElementById('reportYear');
+  const years = getAvailableYears();
+  sel.innerHTML = years.map(y => `<option value="${y}" ${y === _reportYear ? 'selected' : ''}>${y}年</option>`).join('');
+  _reportYear = parseInt(sel.value, 10);
+  document.getElementById('reportModal').classList.add('open');
+  renderReport();
+}
+
+function renderReport() {
+  _reportYear = parseInt(document.getElementById('reportYear').value, 10);
+  const body = document.getElementById('reportBody');
+  const pairs = getActiveSubcatPairs(_reportYear);
+
+  if (pairs.length === 0 && timeEntries.length === 0) {
+    body.innerHTML = `<div class="report-empty">まだ計測記録がありません。<br>業務タイマーで時間を計測してから、再度このレポートを開いてください。</div>`;
+    return;
+  }
+
+  body.innerHTML = `
+    <div class="report-section">
+      <h3>① クライアント（サブカテゴリ）別 月次工数・時間単価</h3>
+      ${renderReportClients(_reportYear, pairs)}
+    </div>
+    <div class="report-section">
+      <h3>② カテゴリ別 月次工数・時間単価</h3>
+      ${renderReportCategories(_reportYear)}
+    </div>
+    <div class="report-section">
+      <h3>③ 全体時間単価（月別）</h3>
+      ${renderReportOverall(_reportYear)}
+    </div>
+  `;
+}
+
+// ── ① サブカテゴリ別マトリクス ──
+function renderReportClients(year, pairs) {
+  if (pairs.length === 0) {
+    return `<div class="report-empty">表示するクライアントがありません。</div>`;
+  }
+  // ソート：カテゴリ順、サブカテゴリ名順
+  pairs.sort((a, b) => {
+    if (a.catId !== b.catId) return (a.catId || '').localeCompare(b.catId || '');
+    return (a.sub || '').localeCompare(b.sub || '');
+  });
+
+  const months = Array.from({length:12}, (_, i) => i);
+  let html = `<div class="report-table-wrap"><table class="report-table"><thead><tr>
+    <th class="col-name">クライアント</th>`;
+  months.forEach(m => html += `<th>${m+1}月</th>`);
+  html += `<th class="col-sep">年間合計</th><th>月額</th><th>課金月</th><th>稼働月</th><th>年間請求額</th><th>月別単価平均</th><th>年間単価</th></tr></thead><tbody>`;
+
+  // 月別合計集計用
+  const monthTotals = Array(12).fill(0);
+  let yearTotalSec = 0, yearTotalFee = 0, totalMonthlyFeeSum = 0;
+
+  for (const p of pairs) {
+    const cat = p.catId ? getCat(p.catId) : null;
+    const fee = getMonthlyFee(p.catId, p.sub);
+    let yearSec = 0, monthsActive = 0;
+    let monthRateSum = 0, monthRateCount = 0;
+    let cells = '';
+    months.forEach(m => {
+      const sec = getMonthlySeconds(p.catId, p.sub, year, m);
+      const billable = isMonthBillable(p.catId, p.sub, year, m);
+      yearSec += sec;
+      monthTotals[m] += sec;
+      if (sec > 0) {
+        monthsActive++;
+        if (billable) {
+          const rate = fee / (sec / 3600);
+          monthRateSum += rate;
+          monthRateCount++;
+        }
+      }
+      // 表示：稼働あり → 時間 / 課金中で稼働なし → 0h（赤系） / それ以外 → ー
+      if (sec > 0) {
+        cells += `<td${billable ? ' class="num-billed"' : ''}>${fmtHours(sec)}</td>`;
+      } else if (billable) {
+        cells += `<td class="num-billable-zero" title="課金月だが稼働なし">0h</td>`;
+      } else {
+        cells += `<td class="num-zero">－</td>`;
+      }
+    });
+    const billableMonths = getBillableMonths(p.catId, p.sub, year);
+    const yearFee = fee * billableMonths;
+    yearTotalSec += yearSec;
+    yearTotalFee += yearFee;
+    totalMonthlyFeeSum += fee;
+
+    const monthAvgRate = monthRateCount > 0 ? Math.round(monthRateSum / monthRateCount) : 0;
+    const yearRate     = yearSec > 0 && fee > 0 ? Math.round(yearFee / (yearSec / 3600)) : 0;
+    const subLabel = p.sub || '（サブカテゴリ未設定）';
+    const catTag = cat ? `<span class="col-cat-tag" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
+
+    html += `<tr>
+      <td class="col-name">${escHtml(subLabel)}${catTag}</td>
+      ${cells}
+      <td class="col-sep">${fmtHours(yearSec) || '－'}</td>
+      <td>${fee ? fmtYenPlain(fee) : '<span class="num-rate-na">未設定</span>'}</td>
+      <td>${billableMonths}/12</td>
+      <td>${monthsActive}/12</td>
+      <td>${yearFee ? fmtYenPlain(yearFee) : '<span class="num-rate-na">―</span>'}</td>
+      <td class="${rateClass(monthAvgRate)}">${monthAvgRate ? fmtYen(monthAvgRate) : 'ー'}</td>
+      <td class="${rateClass(yearRate)}">${yearRate ? fmtYen(yearRate) : 'ー'}</td>
+    </tr>`;
+  }
+
+  // 合計行
+  let totalCells = '';
+  months.forEach(m => {
+    totalCells += monthTotals[m] > 0 ? `<td>${fmtHours(monthTotals[m])}</td>` : `<td class="num-zero">－</td>`;
+  });
+  html += `<tr class="row-total">
+    <td class="col-name">合計</td>
+    ${totalCells}
+    <td class="col-sep">${fmtHours(yearTotalSec) || '－'}</td>
+    <td>${fmtYenPlain(totalMonthlyFeeSum)}</td>
+    <td>―</td><td>―</td>
+    <td>${fmtYenPlain(yearTotalFee)}</td>
+    <td>―</td><td>―</td>
+  </tr>`;
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+// ── ② カテゴリ別マトリクス ──
+function renderReportCategories(year) {
+  const months = Array.from({length:12}, (_, i) => i);
+  // 工数のあるカテゴリ + 月額設定があるサブのカテゴリを抽出
+  const catSet = new Set();
+  for (const e of timeEntries) {
+    const d = new Date(e.startTime);
+    if (d.getFullYear() === year) catSet.add(e.category || '');
+  }
+  Object.keys(clientRates).forEach(k => {
+    const [catId] = k.split('||');
+    catSet.add(catId || '');
+  });
+  if (catSet.size === 0) return `<div class="report-empty">表示するカテゴリがありません。</div>`;
+
+  const cats = [...catSet].sort();
+  const monthTotals = Array(12).fill(0);
+  let yearTotalSec = 0, yearTotalFee = 0;
+
+  let html = `<div class="report-table-wrap"><table class="report-table"><thead><tr>
+    <th class="col-name">カテゴリ</th>`;
+  months.forEach(m => html += `<th>${m+1}月</th>`);
+  html += `<th class="col-sep">年間合計</th><th>年間請求額</th><th>課金月</th><th>稼働月</th><th>月別単価平均</th><th>年間単価</th></tr></thead><tbody>`;
+
+  for (const catId of cats) {
+    const cat = catId ? getCat(catId) : {emoji:'📌', name:'未分類', bg:'#edf2f7', color:'#718096'};
+    let yearSec = 0, monthsActive = 0;
+    let monthRateSum = 0, monthRateCount = 0;
+    let yearFee = 0;
+    let billableMonthCount = 0;
+    let cells = '';
+    months.forEach(m => {
+      const sec = getCategoryMonthlySeconds(catId, year, m);
+      const monthFee = getCategoryMonthlyFee(catId, year, m);  // この月の課金合計
+      yearSec += sec;
+      yearFee += monthFee;
+      monthTotals[m] += sec;
+      if (monthFee > 0) billableMonthCount++;
+      if (sec > 0) {
+        monthsActive++;
+        if (monthFee > 0) {
+          const rate = monthFee / (sec / 3600);
+          monthRateSum += rate;
+          monthRateCount++;
+        }
+      }
+      const billable = monthFee > 0;
+      if (sec > 0) {
+        cells += `<td${billable ? ' class="num-billed"' : ''}>${fmtHours(sec)}</td>`;
+      } else if (billable) {
+        cells += `<td class="num-billable-zero" title="課金月だが稼働なし">0h</td>`;
+      } else {
+        cells += `<td class="num-zero">－</td>`;
+      }
+    });
+    yearTotalSec += yearSec;
+    yearTotalFee += yearFee;
+
+    const monthAvgRate = monthRateCount > 0 ? Math.round(monthRateSum / monthRateCount) : 0;
+    const yearRate     = yearSec > 0 && yearFee > 0 ? Math.round(yearFee / (yearSec / 3600)) : 0;
+
+    html += `<tr>
+      <td class="col-name"><span class="col-cat-tag" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span></td>
+      ${cells}
+      <td class="col-sep">${fmtHours(yearSec) || '－'}</td>
+      <td>${yearFee ? fmtYenPlain(yearFee) : '<span class="num-rate-na">未設定</span>'}</td>
+      <td>${billableMonthCount}/12</td>
+      <td>${monthsActive}/12</td>
+      <td class="${rateClass(monthAvgRate)}">${monthAvgRate ? fmtYen(monthAvgRate) : 'ー'}</td>
+      <td class="${rateClass(yearRate)}">${yearRate ? fmtYen(yearRate) : 'ー'}</td>
+    </tr>`;
+  }
+
+  // 合計行
+  let totalCells = '';
+  months.forEach(m => {
+    totalCells += monthTotals[m] > 0 ? `<td>${fmtHours(monthTotals[m])}</td>` : `<td class="num-zero">－</td>`;
+  });
+  html += `<tr class="row-total">
+    <td class="col-name">合計</td>
+    ${totalCells}
+    <td class="col-sep">${fmtHours(yearTotalSec) || '－'}</td>
+    <td>${fmtYenPlain(yearTotalFee)}</td>
+    <td>―</td><td>―</td><td>―</td><td>―</td>
+  </tr>`;
+  html += `</tbody></table></div>`;
+  return html;
+}
+
+// ── ③ 全体時間単価 ──
+function renderReportOverall(year) {
+  const months = Array.from({length:12}, (_, i) => i);
+
+  // 月別工数・月別請求額（課金対象のサブの月額合計）
+  let yearSec = 0, monthsActive = 0, billableMonths = 0, yearFee = 0;
+  const monthSecs = months.map(m => {
+    const sec = getOverallMonthlySeconds(year, m);
+    const fee = getOverallMonthlyFee(year, m);
+    yearSec += sec;
+    yearFee += fee;
+    if (sec > 0) monthsActive++;
+    if (fee > 0) billableMonths++;
+    return { sec, fee };
+  });
+
+  const overallYearRate = yearSec > 0 && yearFee > 0
+    ? Math.round(yearFee / (yearSec / 3600))
+    : 0;
+
+  // 月別バーチャート
+  const maxSec = Math.max(...monthSecs.map(o => o.sec), 1);
+  const barHtml = months.map(m => {
+    const { sec, fee } = monthSecs[m];
+    const heightPct = sec > 0 ? Math.max(2, Math.round(sec / maxSec * 100)) : 0;
+    const rate = (sec > 0 && fee > 0) ? Math.round(fee / (sec / 3600)) : 0;
+    const tip = sec > 0
+      ? `${m+1}月：${fmtHours(sec)} / 月額 ${fee ? fmtYen(fee) : '未設定'} / 単価 ${rate ? fmtYen(rate) : '未設定'}`
+      : (fee > 0 ? `${m+1}月：未稼働だが課金 ${fmtYen(fee)}` : `${m+1}月：記録なし`);
+    const billableNoWork = sec === 0 && fee > 0;
+    return `<div class="bar-col" title="${tip}">
+      <div class="bar-fill ${billableNoWork ? 'bar-billable-zero' : ''}" style="height:${heightPct || (billableNoWork ? 4 : 0)}%"></div>
+      <div class="bar-label">${m+1}月</div>
+    </div>`;
+  }).join('');
+
+  return `
+    <div class="report-overall">
+      <div class="report-overall-row">
+        <span class="report-overall-label">年間総工数</span>
+        <span class="report-overall-value">${fmtHours(yearSec) || '0h'}</span>
+      </div>
+      <div class="report-overall-row">
+        <span class="report-overall-label">年間総請求額</span>
+        <span class="report-overall-value">${fmtYen(yearFee) || '¥0'}</span>
+      </div>
+      <div class="report-overall-row">
+        <span class="report-overall-label">課金月数 / 稼働月数</span>
+        <span class="report-overall-value">${billableMonths}ヶ月 / ${monthsActive}ヶ月</span>
+      </div>
+      <div class="report-overall-rate">
+        全体平均時間単価：${overallYearRate ? fmtYen(overallYearRate) + ' / 時間' : '― （月額未設定 or 工数0）'}
+      </div>
+      <div style="margin-top:8px">
+        <div style="font-size:0.78rem;color:#7c2d12;font-weight:700;margin-bottom:6px">月別工数推移（課金中で未稼働月は薄い橙）</div>
+        <div class="report-monthly-bar">${barHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+// ── 月額設定モーダル ───────────────────────────────────────────────
+function openRateModal() {
+  renderRateEditor();
+  document.getElementById('rateModal').classList.add('open');
+}
+
+function renderRateEditor() {
+  const body = document.getElementById('rateEditorBody');
+  let html = '';
+  for (const cat of categories) {
+    const subs = getSubcats(cat.id);
+    html += `<div class="rate-cat-section">
+      <div class="rate-cat-header" style="border-bottom-color:${cat.color}">
+        <span style="background:${cat.bg};color:${cat.color};padding:3px 9px;border-radius:6px;font-size:0.85rem">${cat.emoji} ${escHtml(cat.name)}</span>
+      </div>`;
+    if (subs.length === 0) {
+      html += `<div class="rate-empty-cat">サブカテゴリがありません（カテゴリ管理で追加してください）</div>`;
+    } else {
+      for (const sub of subs) {
+        const k = rateKey(cat.id, sub);
+        const r = clientRates[k] || {};
+        const fee = r.monthlyFee || 0;
+        const startYM = r.startYearMonth || '';
+        const endYM   = r.endYearMonth   || '';
+        html += `<div class="rate-row">
+          <label class="rate-row-label">${escHtml(sub)}</label>
+          <div class="rate-row-fields">
+            <span class="rate-field-group">
+              <input type="number" min="0" step="1000" data-key="${escHtml(k)}" data-field="monthlyFee" value="${fee}" placeholder="0" />
+              <span class="yen">円/月</span>
+            </span>
+            <span class="rate-field-group">
+              <span class="rate-field-label">発生開始</span>
+              <input type="month" data-key="${escHtml(k)}" data-field="startYearMonth" value="${startYM}" />
+            </span>
+            <span class="rate-field-group">
+              <span class="rate-field-label">終了</span>
+              <input type="month" data-key="${escHtml(k)}" data-field="endYearMonth" value="${endYM}" />
+            </span>
+          </div>
+        </div>`;
+      }
+    }
+    html += `</div>`;
+  }
+  body.innerHTML = html;
+}
+
+function saveRates() {
+  const inputs = document.querySelectorAll('#rateEditorBody input[data-key]');
+  const grouped = {}; // key → { monthlyFee, startYearMonth, endYearMonth }
+  inputs.forEach(input => {
+    const key   = input.getAttribute('data-key');
+    const field = input.getAttribute('data-field');
+    if (!grouped[key]) grouped[key] = {};
+    if (field === 'monthlyFee') {
+      grouped[key].monthlyFee = parseInt(input.value, 10) || 0;
+    } else {
+      grouped[key][field] = input.value || '';
+    }
+  });
+  const newRates = {};
+  Object.keys(grouped).forEach(k => {
+    const g = grouped[k];
+    // 月額が0でも 発生月の設定がされていれば保持する（後で月額を入れる準備として）
+    if ((g.monthlyFee && g.monthlyFee > 0) || g.startYearMonth) {
+      newRates[k] = {
+        monthlyFee: g.monthlyFee || 0,
+      };
+      if (g.startYearMonth) newRates[k].startYearMonth = g.startYearMonth;
+      if (g.endYearMonth)   newRates[k].endYearMonth   = g.endYearMonth;
+    }
+  });
+  // 入力欄に出てこなかった（カテゴリ・サブカテゴリが既に削除済みなど）キーは保持
+  Object.keys(clientRates).forEach(k => {
+    const found = Array.from(inputs).some(i => i.getAttribute('data-key') === k);
+    if (!found) newRates[k] = clientRates[k];
+  });
+  clientRates = newRates;
+  saveClientRates();
+  closeModal('rateModal');
+  // レポートが開いていれば再描画
+  if (document.getElementById('reportModal').classList.contains('open')) {
+    renderReport();
+  }
+  alert('✅ 月額設定を保存しました');
+}
+
+// ── レポートCSV出力 ──────────────────────────────────────────────
+function exportReportCSV() {
+  const year = _reportYear;
+  const esc = c => {
+    const s = String(c);
+    return /[",\n]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+  };
+  const lines = [];
+  const months = Array.from({length:12}, (_, i) => i);
+  const monthHeaders = months.map(m => (m+1)+'月');
+
+  // ① サブカテゴリ別
+  lines.push([`【${year}年 サブカテゴリ別 月次工数・時間単価】`].map(esc).join(','));
+  lines.push(['クライアント','カテゴリ', ...monthHeaders, '年間合計(時間)','月額(円)','課金月数','稼働月数','年間請求額(円)','月別単価平均(円/h)','年間単価(円/h)'].map(esc).join(','));
+  const pairs = getActiveSubcatPairs(year).sort((a, b) => {
+    if (a.catId !== b.catId) return (a.catId||'').localeCompare(b.catId||'');
+    return (a.sub||'').localeCompare(b.sub||'');
+  });
+  for (const p of pairs) {
+    const fee = getMonthlyFee(p.catId, p.sub);
+    let yearSec = 0, monthsActive = 0, monthRateSum = 0, monthRateCount = 0;
+    const cells = months.map(m => {
+      const sec = getMonthlySeconds(p.catId, p.sub, year, m);
+      const billable = isMonthBillable(p.catId, p.sub, year, m);
+      yearSec += sec;
+      if (sec > 0) {
+        monthsActive++;
+        if (billable) { monthRateSum += fee / (sec / 3600); monthRateCount++; }
+      }
+      return sec > 0 ? (sec/3600).toFixed(2) : (billable ? '0.00' : '');
+    });
+    const billableMonths = getBillableMonths(p.catId, p.sub, year);
+    const yearFee = fee * billableMonths;
+    const monthAvgRate = monthRateCount > 0 ? Math.round(monthRateSum / monthRateCount) : '';
+    const yearRate     = yearSec > 0 && yearFee > 0 ? Math.round(yearFee / (yearSec / 3600)) : '';
+    const cName = (p.catId && getCat(p.catId)) ? getCat(p.catId).name : '';
+    lines.push([
+      p.sub || '（サブカテゴリ未設定）', cName,
+      ...cells,
+      (yearSec/3600).toFixed(2),
+      fee || '',
+      billableMonths,
+      monthsActive,
+      yearFee || '',
+      monthAvgRate,
+      yearRate,
+    ].map(esc).join(','));
+  }
+  lines.push('');
+
+  // ② カテゴリ別
+  lines.push([`【${year}年 カテゴリ別 月次工数・時間単価】`].map(esc).join(','));
+  lines.push(['カテゴリ', ...monthHeaders, '年間合計(時間)','課金月数','稼働月数','年間請求額(円)','月別単価平均(円/h)','年間単価(円/h)'].map(esc).join(','));
+  const catSet = new Set();
+  for (const e of timeEntries) {
+    const d = new Date(e.startTime);
+    if (d.getFullYear() === year) catSet.add(e.category || '');
+  }
+  Object.keys(clientRates).forEach(k => { catSet.add((k.split('||')[0]) || ''); });
+  for (const catId of [...catSet].sort()) {
+    const cName = catId ? (getCat(catId)?.name || catId) : '未分類';
+    let yearSec = 0, monthsActive = 0, monthRateSum = 0, monthRateCount = 0, yearFee = 0, billableMonthCount = 0;
+    const cells = months.map(m => {
+      const sec = getCategoryMonthlySeconds(catId, year, m);
+      const monthFee = getCategoryMonthlyFee(catId, year, m);
+      yearSec += sec;
+      yearFee += monthFee;
+      if (monthFee > 0) billableMonthCount++;
+      if (sec > 0) {
+        monthsActive++;
+        if (monthFee > 0) { monthRateSum += monthFee / (sec / 3600); monthRateCount++; }
+      }
+      return sec > 0 ? (sec/3600).toFixed(2) : (monthFee > 0 ? '0.00' : '');
+    });
+    const monthAvgRate = monthRateCount > 0 ? Math.round(monthRateSum / monthRateCount) : '';
+    const yearRate     = yearSec > 0 && yearFee > 0 ? Math.round(yearFee / (yearSec / 3600)) : '';
+    lines.push([
+      cName,
+      ...cells,
+      (yearSec/3600).toFixed(2),
+      billableMonthCount,
+      monthsActive,
+      yearFee || '',
+      monthAvgRate,
+      yearRate,
+    ].map(esc).join(','));
+  }
+  lines.push('');
+
+  // ③ 全体
+  let yearSec = 0, monthsActive = 0, yearFee = 0, billableMonths = 0;
+  months.forEach(m => {
+    const s = getOverallMonthlySeconds(year, m);
+    const f = getOverallMonthlyFee(year, m);
+    yearSec += s; yearFee += f;
+    if (s > 0) monthsActive++;
+    if (f > 0) billableMonths++;
+  });
+  const overallRate = yearSec > 0 && yearFee > 0 ? Math.round(yearFee / (yearSec/3600)) : '';
+  lines.push([`【${year}年 全体時間単価】`].map(esc).join(','));
+  lines.push(['年間総工数(時間)','課金月数','稼働月数','年間総請求額(円)','全体時間単価(円/h)'].map(esc).join(','));
+  lines.push([
+    (yearSec/3600).toFixed(2),
+    billableMonths,
+    monthsActive,
+    yearFee,
+    overallRate,
+  ].map(esc).join(','));
+
+  const csv = lines.join('\r\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `工数レポート_${year}年.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(a.href);
+}
+
+// ══════════════════════════════════════════════════════════════════════
+//  🔄  Google Drive 同期機能（v3 追加機能）
+// ══════════════════════════════════════════════════════════════════════
+
+const GDRIVE_SCOPE       = 'https://www.googleapis.com/auth/drive.file';
+const GDRIVE_FOLDER_NAME = 'タスク管理v3-同期データ';
+const GDRIVE_FILE_NAME   = 'data.json';
+const SYNC_DEBOUNCE_MS   = 3000;
+
+let _gdriveTokenClient = null;
+let _gdriveAccessToken = null;
+let _gdriveFolderId    = localStorage.getItem('gdriveFolderId') || null;
+let _gdriveFileId      = localStorage.getItem('gdriveFileId')   || null;
+let _gdriveLastSync    = parseInt(localStorage.getItem('gdriveLastSync') || '0', 10);
+let _syncStatus        = 'idle';   // 'idle'|'syncing'|'ok'|'error'|'unauth'|'noconfig'
+let _syncMessage       = '';
+let _syncDebounceTimer = null;
+
+function isGdriveAutoSyncEnabled() { return localStorage.getItem('gdriveAutoSync') === '1'; }
+function setGdriveAutoSync(on) {
+  localStorage.setItem('gdriveAutoSync', on ? '1' : '0');
+  updateSyncStatusUI();
+  if (on) gdriveSync({ silent:false });
+}
+
+function setSyncStatus(status, msg) {
+  _syncStatus  = status;
+  _syncMessage = msg || '';
+  updateSyncStatusUI();
+}
+
+function updateSyncStatusUI() {
+  const el = document.getElementById('headerSyncBadge');
+  if (!el) return;
+  const tooltip = _syncMessage || '';
+  let html = '';
+  let cls  = 'header-sync-badge';
+  if (_syncStatus === 'syncing') { cls += ' status-syncing';   html = '🔄 同期中…'; }
+  else if (_syncStatus === 'ok'){
+    cls += ' status-ok';
+    const t = _gdriveLastSync ? new Date(_gdriveLastSync) : null;
+    const ts = t ? `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}` : '';
+    html = `✅ 同期済 ${ts}`;
+  }
+  else if (_syncStatus === 'error') { cls += ' status-error';  html = '⚠️ 同期エラー'; }
+  else if (_syncStatus === 'unauth'){ cls += ' status-unauth'; html = '🔑 要認証'; }
+  else if (_syncStatus === 'noconfig'){ cls += ' status-noconfig'; html = '⚙️ 同期未設定'; }
+  else { cls += ' status-idle'; html = isGdriveAutoSyncEnabled() ? '⏸ 待機中' : '🔄 同期OFF'; }
+  el.className = cls;
+  el.innerHTML = html;
+  el.title = tooltip;
+}
+
+function scheduleAutoSync() {
+  if (!isGdriveAutoSyncEnabled()) return;
+  if (_syncDebounceTimer) clearTimeout(_syncDebounceTimer);
+  _syncDebounceTimer = setTimeout(() => {
+    _syncDebounceTimer = null;
+    gdriveSync({ silent:true });
+  }, SYNC_DEBOUNCE_MS);
+}
+
+// ── 認証 ──────────────────────────────────────────────────────────
+function gdriveEnsureTokenClient() {
+  if (_gdriveTokenClient) return _gdriveTokenClient;
+  const cid = (intgSettings.gcal || {}).clientId;
+  if (!cid) return null;
+  if (!window.google || !window.google.accounts) return null;
+  _gdriveTokenClient = window.google.accounts.oauth2.initTokenClient({
+    client_id: cid,
+    scope: GDRIVE_SCOPE,
+    callback: (resp) => {
+      if (resp && resp.access_token) {
+        _gdriveAccessToken = resp.access_token;
+        setSyncStatus('ok', '認証成功');
+        gdriveSync({ silent:false });
+      } else {
+        setSyncStatus('error', '認証応答が空でした');
+      }
+    },
+    error_callback: (err) => {
+      setSyncStatus('error', '認証エラー: ' + (err && err.message ? err.message : 'unknown'));
+    },
+  });
+  return _gdriveTokenClient;
+}
+
+async function gdriveAuthorize() {
+  const cid = (intgSettings.gcal || {}).clientId;
+  if (!cid) {
+    alert('「🔗 連携設定」でOAuth クライアントID を先に設定してください。');
+    return;
+  }
+  const tc = gdriveEnsureTokenClient();
+  if (!tc) {
+    setSyncStatus('error', 'Google認証SDKの読み込みを待っています。数秒後にもう一度お試しください。');
+    return;
+  }
+  setSyncStatus('syncing', '認証中…');
+  tc.requestAccessToken({ prompt: _gdriveAccessToken ? '' : 'consent' });
+}
+
+function gdriveSignOut() {
+  if (_gdriveAccessToken && window.google && window.google.accounts) {
+    try { window.google.accounts.oauth2.revoke(_gdriveAccessToken, () => {}); } catch (_) {}
+  }
+  _gdriveAccessToken = null;
+  setSyncStatus('unauth', 'サインアウトしました');
+}
+
+// ── Drive API 呼び出しヘルパー ────────────────────────────────────
+async function _driveApi(path, opts) {
+  if (!_gdriveAccessToken) throw new Error('未認証です');
+  const url = path.startsWith('http') ? path : ('https://www.googleapis.com' + path);
+  const init = Object.assign({}, opts || {});
+  init.headers = Object.assign({}, init.headers || {}, {
+    'Authorization': 'Bearer ' + _gdriveAccessToken,
+  });
+  const res = await fetch(url, init);
+  if (res.status === 401) {
+    _gdriveAccessToken = null;
+    setSyncStatus('unauth', '認証期限切れ。再認証してください。');
+    throw new Error('認証期限切れ');
+  }
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Drive API エラー: ${res.status} ${txt.slice(0, 200)}`);
+  }
+  return res;
+}
+
+// 同期用フォルダを探して作る
+async function gdriveEnsureFolder() {
+  if (_gdriveFolderId) {
+    // 検証：本当に存在するか
+    try {
+      await _driveApi(`/drive/v3/files/${_gdriveFolderId}?fields=id,name,trashed`);
+      return _gdriveFolderId;
+    } catch (e) {
+      _gdriveFolderId = null; // 削除されている場合は作り直す
+    }
+  }
+  // 既存検索
+  const q = `name='${GDRIVE_FOLDER_NAME}' and mimeType='application/vnd.google-apps.folder' and trashed=false`;
+  const search = await _driveApi(`/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=10`);
+  const sd = await search.json();
+  if (sd.files && sd.files.length > 0) {
+    _gdriveFolderId = sd.files[0].id;
+    localStorage.setItem('gdriveFolderId', _gdriveFolderId);
+    return _gdriveFolderId;
+  }
+  // 新規作成
+  const create = await _driveApi('/drive/v3/files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      name: GDRIVE_FOLDER_NAME,
+      mimeType: 'application/vnd.google-apps.folder',
+    }),
+  });
+  const cd = await create.json();
+  _gdriveFolderId = cd.id;
+  localStorage.setItem('gdriveFolderId', _gdriveFolderId);
+  return _gdriveFolderId;
+}
+
+// 同期用ファイルを探して作る
+async function gdriveEnsureFile() {
+  if (_gdriveFileId) {
+    try {
+      await _driveApi(`/drive/v3/files/${_gdriveFileId}?fields=id,name,trashed,modifiedTime`);
+      return _gdriveFileId;
+    } catch (e) {
+      _gdriveFileId = null;
+    }
+  }
+  const folderId = await gdriveEnsureFolder();
+  // 既存ファイル検索
+  const q = `name='${GDRIVE_FILE_NAME}' and '${folderId}' in parents and trashed=false`;
+  const search = await _driveApi(`/drive/v3/files?q=${encodeURIComponent(q)}&fields=files(id,name)&pageSize=10`);
+  const sd = await search.json();
+  if (sd.files && sd.files.length > 0) {
+    _gdriveFileId = sd.files[0].id;
+    localStorage.setItem('gdriveFileId', _gdriveFileId);
+    return _gdriveFileId;
+  }
+  // 新規作成（空のJSONを書き込む）
+  const meta = { name: GDRIVE_FILE_NAME, parents: [folderId], mimeType: 'application/json' };
+  const boundary = '-------v3sync' + Math.random().toString(36).slice(2);
+  const body = `--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+               JSON.stringify(meta) + `\r\n--${boundary}\r\nContent-Type: application/json; charset=UTF-8\r\n\r\n` +
+               JSON.stringify({ dataVersion:0 }) + `\r\n--${boundary}--`;
+  const create = await _driveApi('/upload/drive/v3/files?uploadType=multipart&fields=id', {
+    method: 'POST',
+    headers: { 'Content-Type': 'multipart/related; boundary=' + boundary },
+    body,
+  });
+  const cd = await create.json();
+  _gdriveFileId = cd.id;
+  localStorage.setItem('gdriveFileId', _gdriveFileId);
+  return _gdriveFileId;
+}
+
+// ── ローカル全データのスナップショット ──
+function snapshotLocalData() {
+  return {
+    dataVersion:    getDataVersion(),
+    tasks, subcats, recurringTasks, categories, taxEventTypes,
+    clientTaxMap, clientRates, timeEntries,
+    syncedAt: Date.now(),
+    syncedFrom: 'web',
+  };
+}
+
+// ── 配列のID付きマージ（新しい _updatedAt 優先・なければ最新を残す） ──
+function mergeArrayById(localArr, remoteArr) {
+  const map = new Map();
+  for (const r of (remoteArr || [])) map.set(r.id, r);
+  for (const l of (localArr  || [])) {
+    const r = map.get(l.id);
+    if (!r) { map.set(l.id, l); continue; }
+    const lu = l._updatedAt || 0;
+    const ru = r._updatedAt || 0;
+    if (lu >= ru) map.set(l.id, l);
+  }
+  return Array.from(map.values());
+}
+
+// ── データのインポート（マージ戦略） ──
+function applyMergedData(remote, mode) {
+  // mode: 'remote-newer' | 'local-newer' | 'merge'
+  if (!remote || typeof remote !== 'object') return;
+  if (mode === 'remote-newer') {
+    // リモート優先：そのまま採用（ただし配列はID単位でローカルもマージ）
+    if (Array.isArray(remote.tasks))          tasks          = mergeArrayById(tasks, remote.tasks);
+    if (Array.isArray(remote.recurringTasks)) recurringTasks = mergeArrayById(recurringTasks, remote.recurringTasks);
+    if (Array.isArray(remote.timeEntries))    timeEntries    = mergeArrayById(timeEntries, remote.timeEntries);
+    if (Array.isArray(remote.taxEventTypes))  taxEventTypes  = mergeArrayById(taxEventTypes, remote.taxEventTypes);
+    if (Array.isArray(remote.categories))     categories     = remote.categories;
+    if (remote.subcats       && typeof remote.subcats === 'object')      subcats      = remote.subcats;
+    if (remote.clientTaxMap  && typeof remote.clientTaxMap === 'object') clientTaxMap = remote.clientTaxMap;
+    if (remote.clientRates   && typeof remote.clientRates === 'object')  clientRates  = remote.clientRates;
+  }
+  // 'local-newer' は何もしない（ローカルをアップロードする）
+  // 'merge' は配列だけマージ（settingsはローカル優先）
+  if (mode === 'merge') {
+    if (Array.isArray(remote.tasks))          tasks          = mergeArrayById(tasks, remote.tasks);
+    if (Array.isArray(remote.recurringTasks)) recurringTasks = mergeArrayById(recurringTasks, remote.recurringTasks);
+    if (Array.isArray(remote.timeEntries))    timeEntries    = mergeArrayById(timeEntries, remote.timeEntries);
+  }
+}
+
+function persistAllLocal() {
+  localStorage.setItem('tasks',          JSON.stringify(tasks));
+  localStorage.setItem('subcats',        JSON.stringify(subcats));
+  localStorage.setItem('recurringTasks', JSON.stringify(recurringTasks));
+  localStorage.setItem('categories',     JSON.stringify(categories));
+  localStorage.setItem('taxEventTypes',  JSON.stringify(taxEventTypes));
+  localStorage.setItem('clientTaxMap',   JSON.stringify(clientTaxMap));
+  localStorage.setItem('clientRates',    JSON.stringify(clientRates));
+  localStorage.setItem('timeEntries',    JSON.stringify(timeEntries));
+}
+
+// ── メインの同期関数 ───────────────────────────────────────────────
+async function gdriveSync(opts) {
+  opts = opts || {};
+  const cid = (intgSettings.gcal || {}).clientId;
+  if (!cid) { setSyncStatus('noconfig', 'OAuth クライアントID未設定'); return; }
+  if (!_gdriveAccessToken) {
+    setSyncStatus('unauth', '認証してください');
+    if (!opts.silent) await gdriveAuthorize();
+    return;
+  }
+  setSyncStatus('syncing', '同期中...');
+  try {
+    const fileId = await gdriveEnsureFile();
+    // リモート読み込み
+    const res = await _driveApi(`/drive/v3/files/${fileId}?alt=media`);
+    let remote = {};
+    try { remote = await res.json(); } catch (_) { remote = {}; }
+
+    const localVer  = getDataVersion();
+    const remoteVer = (remote && remote.dataVersion) || 0;
+
+    if (remoteVer > localVer) {
+      applyMergedData(remote, 'remote-newer');
+      persistAllLocal();
+      // ローカルバージョンをリモートに合わせる
+      localStorage.setItem('dataVersion', String(remoteVer));
+      // UI再描画
+      populateCatSelects();
+      try { renderCatTabs(); } catch(_){}
+      try { renderTasks(); } catch(_){}
+      try { renderTaxPanel(); } catch(_){}
+      try { renderTimer(); } catch(_){}
+      if (document.getElementById('reportModal') && document.getElementById('reportModal').classList.contains('open')) {
+        try { renderReport(); } catch(_){}
+      }
+    } else if (remoteVer === localVer) {
+      // 完全一致：何もしない
+    } else {
+      // localVer > remoteVer: 配列レベルだけマージしてアップロード
+      applyMergedData(remote, 'merge');
+      persistAllLocal();
+    }
+    // アップロード（最新ローカルをアップロード）
+    const snapshot = snapshotLocalData();
+    const upRes = await _driveApi(`/upload/drive/v3/files/${fileId}?uploadType=media`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json; charset=UTF-8' },
+      body: JSON.stringify(snapshot),
+    });
+    if (!upRes.ok) throw new Error('アップロード失敗');
+
+    _gdriveLastSync = Date.now();
+    localStorage.setItem('gdriveLastSync', String(_gdriveLastSync));
+    setSyncStatus('ok', `同期完了：${new Date().toLocaleTimeString('ja-JP')}`);
+  } catch (e) {
+    console.error(e);
+    setSyncStatus('error', e.message || String(e));
+    if (!opts.silent) alert('❌ 同期エラー: ' + (e.message || e));
+  }
+}
+
+// ウィンドウフォーカス時に自動同期（端末切り替え時に最新化）
+window.addEventListener('focus', () => {
+  if (isGdriveAutoSyncEnabled() && _gdriveAccessToken) {
+    gdriveSync({ silent:true });
+  }
+});
+
+// ── サブカテゴリ削除時の連動 ────────────────────────────────────────
+const _origDeleteSubcat = deleteSubcat;
+deleteSubcat = function(i) {
+  const sub = subcats[managerCat] && subcats[managerCat][i];
+  if (sub) {
+    const k = rateKey(managerCat, sub);
+    if (clientRates[k]) {
+      delete clientRates[k];
+      saveClientRates();
+    }
+  }
+  _origDeleteSubcat(i);
+};
+
+// ── バックアップ拡張（clientRatesも含める） ───────────────────────
+const _origExportJSON = exportJSON;
+exportJSON = function() {
+  // 既存の exportJSON は data.version=4 を使用。ここでは追加でclientRates/timeEntriesを埋め込む
+  const data = {
+    tasks, subcats, recurringTasks, categories, taxEventTypes, clientTaxMap,
+    clientRates, timeEntries,
+    exportedAt: new Date().toISOString(),
+    version: 5,
+  };
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type:'application/json'}));
+  a.download = `タスクバックアップ_${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+};
+
+const _origImportJSON = importJSON;
+importJSON = function(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (!data.tasks || !Array.isArray(data.tasks)) throw new Error();
+      const mode = confirm('【上書き】OK → 現在データを削除して復元\n【追加合体】キャンセル → 現在データに追加');
+      if (mode) {
+        tasks = data.tasks; subcats = data.subcats || {}; recurringTasks = data.recurringTasks || [];
+        if (data.categories && Array.isArray(data.categories)) categories = data.categories;
+        if (data.taxEventTypes && Array.isArray(data.taxEventTypes)) taxEventTypes = data.taxEventTypes;
+        if (data.clientTaxMap) clientTaxMap = data.clientTaxMap;
+        if (data.clientRates) clientRates = data.clientRates;
+        if (Array.isArray(data.timeEntries)) timeEntries = data.timeEntries;
+      } else {
+        const ids = new Set(tasks.map(t => t.id));
+        tasks = [...tasks, ...data.tasks.filter(t => !ids.has(t.id))];
+        if (data.subcats) Object.keys(data.subcats).forEach(cat => {
+          if (!subcats[cat]) subcats[cat] = [];
+          data.subcats[cat].forEach(s => { if (!subcats[cat].includes(s)) subcats[cat].push(s); });
+        });
+        if (data.recurringTasks) {
+          const rids = new Set(recurringTasks.map(r => r.id));
+          recurringTasks = [...recurringTasks, ...data.recurringTasks.filter(r => !rids.has(r.id))];
+        }
+        if (data.categories && Array.isArray(data.categories)) {
+          data.categories.forEach(c => { if (!categories.some(cc => cc.id === c.id)) categories.push(c); });
+        }
+        if (data.taxEventTypes && Array.isArray(data.taxEventTypes)) {
+          data.taxEventTypes.forEach(te => { if (!taxEventTypes.some(e => e.id === te.id)) taxEventTypes.push(te); });
+        }
+        if (data.clientTaxMap) {
+          Object.keys(data.clientTaxMap).forEach(k => {
+            if (!clientTaxMap[k]) clientTaxMap[k] = [];
+            data.clientTaxMap[k].forEach(id => { if (!clientTaxMap[k].includes(id)) clientTaxMap[k].push(id); });
+          });
+        }
+        if (data.clientRates) {
+          Object.keys(data.clientRates).forEach(k => {
+            if (!clientRates[k]) clientRates[k] = data.clientRates[k];
+          });
+        }
+        if (Array.isArray(data.timeEntries)) {
+          const eids = new Set(timeEntries.map(e => e.id));
+          timeEntries = [...timeEntries, ...data.timeEntries.filter(e => !eids.has(e.id))];
+        }
+      }
+      saveTasks(); saveSubcats(); saveRec(); saveCats(); saveTaxEvents(); saveClientTaxMap();
+      saveClientRates(); saveTimeEntries();
+      populateCatSelects(); updateSubcatSelect('taskSubcat', document.getElementById('taskCategory').value);
+      renderCatTabs(); renderSubcatFilterBar(); renderTasks(); renderTaxPanel();
+      renderTimer();
+      alert('✅ データを復元しました');
+    } catch (err) {
+      alert('❌ ファイルが不正です: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+};
+
+// ══════════════════════════════════════════════════════════════════════
+//  Init
+// ══════════════════════════════════════════════════════════════════════
+// 連携設定の読み込み
+intgSettings = JSON.parse(localStorage.getItem('intgSettings') || '{}');
+
+populateCatSelects();
+updateSubcatSelect('taskSubcat', document.getElementById('taskCategory').value);
+renderCatTabs();
+renderTasks();
+renderTaxPanel();
+renderTimer();   // ⏱  v3 業務タイマー初期化
+
+// 🔄 Google Drive 同期 初期化
+(function initGdriveSync() {
+  const cid = (intgSettings.gcal || {}).clientId;
+  if (!cid) {
+    setSyncStatus('noconfig', '');
+    return;
+  }
+  // ClientID 設定済みでも認証はユーザー操作が必要
+  setSyncStatus('unauth', '「☁️ Google Drive 同期」セクションで認証してください');
+  // 自動同期ONなら 起動時に同期試行（ただし認証ダイアログは出さない・silent）
+  if (isGdriveAutoSyncEnabled()) {
+    // SDK ロード待ち
+    setTimeout(() => {
+      if (window.google && window.google.accounts) {
+        // サイレント認証は不可なので、ユーザーが連携設定を開いたタイミングで認証する
+      }
+    }, 1500);
+  }
+})();
+</script>
+</body>
+</html>
