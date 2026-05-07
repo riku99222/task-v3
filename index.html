@@ -642,7 +642,7 @@
     <p>タスク管理＋業務タイマー一体型</p>
   </div>
   <div class="header-btns">
-    <span class="header-sync-badge status-noconfig" id="headerSyncBadge" onclick="openIntgModal()" title="クリックで同期設定">⚙️ 同期未設定</span>
+    <span class="header-sync-badge status-noconfig" id="headerSyncBadge" onclick="onSyncBadgeClick()" title="クリックで同期">⚙️ 同期未設定</span>
     <span class="header-timer-badge" id="headerTimerBadge" onclick="scrollToTimer()">
       <span class="htb-dot"></span><span id="headerTimerLabel">計測中</span>
     </span>
@@ -3754,6 +3754,15 @@ function updateSyncStatusUI() {
   el.title = tooltip;
 }
 
+// ヘッダーバッジクリック時の動作（状態に応じて分岐）
+function onSyncBadgeClick() {
+  if (_syncStatus === 'noconfig') { openIntgModal(); return; }
+  if (_syncStatus === 'unauth')   { gdriveAuthorize(); return; }
+  if (_syncStatus === 'syncing')  { return; }
+  // ok / error / idle → 即同期実行
+  gdriveSync({ silent:false });
+}
+
 function scheduleAutoSync() {
   if (!isGdriveAutoSyncEnabled()) return;
   if (_syncDebounceTimer) clearTimeout(_syncDebounceTimer);
@@ -4141,22 +4150,20 @@ renderTimer();   // ⏱  v3 業務タイマー初期化
 
 // 🔄 Google Drive 同期 初期化
 (function initGdriveSync() {
-  const cid = (intgSettings.gcal || {}).clientId;
-  if (!cid) {
-    setSyncStatus('noconfig', '');
-    return;
+  // ── 既定の OAuth Client ID（このツール専用に発行済み） ──
+  const DEFAULT_CLIENT_ID = '662524635661-4l3mgptdnn8v6q5ir1934rkchscnruev.apps.googleusercontent.com';
+  if (!intgSettings.gcal) intgSettings.gcal = {};
+  if (!intgSettings.gcal.clientId) {
+    intgSettings.gcal.clientId = DEFAULT_CLIENT_ID;
+    intgSettings.gcal.calendarId = intgSettings.gcal.calendarId || 'primary';
+    saveIntgSettings();
+  }
+  // ── 自動同期を初回はONに ──
+  if (localStorage.getItem('gdriveAutoSync') === null) {
+    localStorage.setItem('gdriveAutoSync', '1');
   }
   // ClientID 設定済みでも認証はユーザー操作が必要
-  setSyncStatus('unauth', '「☁️ Google Drive 同期」セクションで認証してください');
-  // 自動同期ONなら 起動時に同期試行（ただし認証ダイアログは出さない・silent）
-  if (isGdriveAutoSyncEnabled()) {
-    // SDK ロード待ち
-    setTimeout(() => {
-      if (window.google && window.google.accounts) {
-        // サイレント認証は不可なので、ユーザーが連携設定を開いたタイミングで認証する
-      }
-    }, 1500);
-  }
+  setSyncStatus('unauth', '右上の同期バッジから認証してください');
 })();
 </script>
 </body>
