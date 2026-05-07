@@ -608,6 +608,77 @@
     .report-table .num-billed{background:#f0fff4}
     .report-monthly-bar .bar-billable-zero{background:repeating-linear-gradient(45deg,#fed7aa 0px,#fed7aa 4px,#ffedd5 4px,#ffedd5 8px);min-height:4px}
 
+    /* スポット料金マーク */
+    .spot-mark{color:#7c3aed;font-size:0.7rem;margin-left:3px;vertical-align:middle}
+    .report-table .spot-mark{color:#7c3aed}
+    /* 月額変更履歴マーク */
+    .hist-mark{font-size:0.7rem;margin-left:3px;vertical-align:middle}
+    .hist-mark-sm{font-size:0.65rem;margin-left:4px;opacity:0.8}
+
+    /* 月額変更履歴エディタ */
+    .btn-hist-toggle{background:#fef3c7;border:1.5px solid #fcd34d;color:#92400e;
+      border-radius:7px;padding:5px 10px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .btn-hist-toggle:hover{background:#fde68a}
+    .btn-hist-toggle.active{background:#f59e0b;color:white;border-color:#f59e0b}
+    .fee-history-editor{margin:6px 0 12px 16px;padding:10px;background:#fffbeb;border:1.5px solid #fde68a;
+      border-radius:9px}
+    .hist-title{font-size:0.78rem;font-weight:700;color:#92400e;margin-bottom:8px;line-height:1.5}
+    .hist-title small{color:#b45309;font-weight:500;font-size:0.7rem}
+    .hist-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+    .hist-row{display:flex;align-items:center;gap:8px;font-size:0.82rem;flex-wrap:wrap}
+    .hist-row input[type=month]{padding:5px 8px;border:1.5px solid #fde68a;border-radius:6px;
+      font-size:0.78rem;font-family:inherit}
+    .hist-row input[type=number]{width:120px;padding:5px 8px;border:1.5px solid #fde68a;border-radius:6px;
+      font-size:0.82rem;text-align:right;font-variant-numeric:tabular-nums}
+    .hist-row .hist-arrow{font-size:0.75rem;color:#92400e;font-weight:700}
+    .hist-empty{color:#b45309;font-size:0.78rem;font-style:italic;padding:4px}
+    .btn-hist-add{background:white;border:1.5px dashed #f59e0b;color:#92400e;
+      border-radius:7px;padding:5px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-hist-add:hover{background:#fffbeb}
+    .btn-hist-remove{background:transparent;border:none;color:#fbbf24;cursor:pointer;
+      font-size:0.9rem;padding:3px 6px;border-radius:5px}
+    .btn-hist-remove:hover{background:#fde68a;color:#92400e}
+
+    /* スポット料金エディタ */
+    .btn-spot-toggle{background:#f5f3ff;border:1.5px solid #c4b5fd;color:#7c3aed;
+      border-radius:7px;padding:5px 10px;font-size:0.72rem;font-weight:700;cursor:pointer;font-family:inherit;white-space:nowrap}
+    .btn-spot-toggle:hover{background:#ede9fe}
+    .btn-spot-toggle.active{background:#7c3aed;color:white;border-color:#7c3aed}
+    .spot-fee-editor{margin:6px 0 12px 16px;padding:10px;background:#faf5ff;border:1.5px solid #ddd6fe;
+      border-radius:9px}
+    .spot-fee-title{font-size:0.78rem;font-weight:700;color:#7c3aed;margin-bottom:8px;line-height:1.5}
+    .spot-fee-title small{color:#a78bfa;font-weight:500;font-size:0.7rem}
+    .spot-fee-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+    .spot-fee-row{display:flex;align-items:center;gap:8px;font-size:0.82rem}
+    .spot-fee-row input[type=month]{padding:5px 8px;border:1.5px solid #ddd6fe;border-radius:6px;
+      font-size:0.78rem;font-family:inherit}
+    .spot-fee-row input[type=number]{width:120px;padding:5px 8px;border:1.5px solid #ddd6fe;border-radius:6px;
+      font-size:0.82rem;text-align:right;font-variant-numeric:tabular-nums}
+    .spot-fee-empty{color:#a78bfa;font-size:0.78rem;font-style:italic;padding:4px}
+    .btn-spot-add{background:white;border:1.5px dashed #7c3aed;color:#7c3aed;
+      border-radius:7px;padding:5px 12px;font-size:0.75rem;font-weight:700;cursor:pointer;font-family:inherit}
+    .btn-spot-add:hover{background:#f5f3ff}
+    .btn-spot-remove{background:transparent;border:none;color:#a78bfa;cursor:pointer;
+      font-size:0.9rem;padding:3px 6px;border-radius:5px}
+    .btn-spot-remove:hover{background:#ede9fe;color:#7c3aed}
+
+    /* タイマー警告状態 */
+    .timer-card.warn-medium{
+      background:linear-gradient(135deg,#fef3c7 0%,#fed7aa 100%);
+      border-left-color:#f59e0b;
+    }
+    .timer-card.warn-long{
+      background:linear-gradient(135deg,#fee2e2 0%,#fecaca 100%);
+      border-left-color:#dc2626;
+      animation:timerWarn 1s ease-in-out infinite;
+    }
+    @keyframes timerWarn{
+      0%,100%{box-shadow:0 4px 16px rgba(220,38,38,0.3)}
+      50%    {box-shadow:0 4px 28px rgba(220,38,38,0.6)}
+    }
+    .timer-elapsed.warn-medium{color:#b45309}
+    .timer-elapsed.warn-long{color:#991b1b}
+
     /* 工数編集モーダル */
     .te-edit-modal{max-width:520px}
     .te-edit-modal .form-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
@@ -2553,13 +2624,58 @@ function startTimerTick() {
 function stopTimerTick() {
   if (_timerTickHandle) { clearInterval(_timerTickHandle); _timerTickHandle = null; }
 }
+// タイマー警告閾値
+const TIMER_WARN_MEDIUM_SEC = 4 * 3600;  // 4時間で黄色警告
+const TIMER_WARN_LONG_SEC   = 8 * 3600;  // 8時間で赤警告
+const TIMER_FOCUS_CONFIRM_SEC = 4 * 3600; // フォーカス時に確認（4時間以上）
+
 function updateTimerTick() {
-  if (!activeTimer) { stopTimerTick(); return; }
+  if (!activeTimer) {
+    // 元のタイトルに戻す
+    if (document.title.startsWith('⏱')) document.title = 'タスク管理ツール v3';
+    stopTimerTick();
+    return;
+  }
   const sec = Math.floor((Date.now() - new Date(activeTimer.startTime).getTime()) / 1000);
   const elapsedEl = document.getElementById('timerElapsed');
-  if (elapsedEl) elapsedEl.textContent = fmtDuration(sec);
+  if (elapsedEl) {
+    elapsedEl.textContent = fmtDuration(sec);
+    elapsedEl.classList.toggle('warn-medium', sec >= TIMER_WARN_MEDIUM_SEC && sec < TIMER_WARN_LONG_SEC);
+    elapsedEl.classList.toggle('warn-long',   sec >= TIMER_WARN_LONG_SEC);
+  }
   const headerEl = document.getElementById('headerTimerLabel');
   if (headerEl) headerEl.textContent = fmtDuration(sec);
+
+  // タイマーカードに警告色
+  const card = document.getElementById('timerCard');
+  if (card) {
+    card.classList.toggle('warn-medium', sec >= TIMER_WARN_MEDIUM_SEC && sec < TIMER_WARN_LONG_SEC);
+    card.classList.toggle('warn-long',   sec >= TIMER_WARN_LONG_SEC);
+  }
+
+  // ブラウザタブのタイトルに経過時間を表示（PCのタブで気づきやすい）
+  const target = activeTimer.name || '計測中';
+  document.title = `⏱ ${fmtDuration(sec)} - ${target}`;
+}
+
+// アプリにフォーカスが戻ったときに長時間計測を確認
+let _lastTimerFocusCheck = 0;
+function _checkLongRunningTimerOnFocus() {
+  if (!activeTimer) return;
+  const now = Date.now();
+  // 同じセッション内で何度も聞かない（最低3分間隔）
+  if (now - _lastTimerFocusCheck < 180000) return;
+  const sec = Math.floor((now - new Date(activeTimer.startTime).getTime()) / 1000);
+  if (sec < TIMER_FOCUS_CONFIRM_SEC) return;
+  _lastTimerFocusCheck = now;
+  const target = activeTimer.name || '（業務名未入力）';
+  const hoursStr = (sec / 3600).toFixed(1);
+  setTimeout(() => {
+    const ans = confirm(`⚠️ タイマー稼働中の確認\n\n「${target}」を ${hoursStr}時間 計測中です。\n停止し忘れていませんか？\n\n[OK] このまま継続\n[キャンセル] 今すぐストップ`);
+    if (!ans) {
+      stopTimer();
+    }
+  }, 500);
 }
 
 // ── レンダリング ────────────────────────────────────────────────────
@@ -3059,13 +3175,56 @@ let _reportYear = new Date().getFullYear();
 function saveClientRates() { localStorage.setItem('clientRates', JSON.stringify(clientRates)); }
 function rateKey(catId, sub) { return (catId || '') + '||' + (sub || ''); }
 function getMonthlyFee(catId, sub) {
+  // 基本月額（top-level monthlyFee）。発生開始時の初期月額として使う。
   const r = clientRates[rateKey(catId, sub)];
   return r && typeof r.monthlyFee === 'number' ? r.monthlyFee : 0;
+}
+// 月額の履歴を考慮した、その月における基本月額
+// feeHistory: [{ from: "YYYY-MM", monthlyFee: 整数 }, ...]
+function getEffectiveMonthlyFee(catId, sub, year, monthIdx) {
+  const r = clientRates[rateKey(catId, sub)];
+  if (!r) return 0;
+  let base = r.monthlyFee || 0;
+  if (Array.isArray(r.feeHistory) && r.feeHistory.length > 0) {
+    const ym = `${year}-${String(monthIdx+1).padStart(2,'0')}`;
+    const sorted = r.feeHistory
+      .filter(h => h && h.from && typeof h.monthlyFee === 'number')
+      .slice().sort((a,b) => a.from.localeCompare(b.from));
+    for (const h of sorted) {
+      if (h.from <= ym) base = h.monthlyFee;
+      else break;
+    }
+  }
+  return base;
+}
+// 現時点での有効な月額（UI表示・現行料金として）
+function getCurrentEffectiveFee(catId, sub) {
+  const n = new Date();
+  return getEffectiveMonthlyFee(catId, sub, n.getFullYear(), n.getMonth());
+}
+function hasFeeHistory(catId, sub) {
+  const r = clientRates[rateKey(catId, sub)];
+  return r && Array.isArray(r.feeHistory) && r.feeHistory.length > 0;
+}
+// その月のスポット料金（基本月額に加算/減算する金額。マイナス可）
+function getSpotFee(catId, sub, year, monthIdx) {
+  const r = clientRates[rateKey(catId, sub)];
+  if (!r || !r.spotFees) return 0;
+  const ym = `${year}-${String(monthIdx+1).padStart(2,'0')}`;
+  return r.spotFees[ym] || 0;
+}
+// 実際のその月の請求額（その月の有効月額 + スポット料金）
+function getActualMonthlyFee(catId, sub, year, monthIdx) {
+  if (!isMonthBillable(catId, sub, year, monthIdx)) return 0;
+  return getEffectiveMonthlyFee(catId, sub, year, monthIdx) + getSpotFee(catId, sub, year, monthIdx);
 }
 // 指定月（year, monthIdx[0..11]）が課金対象か判定
 function isMonthBillable(catId, sub, year, monthIdx) {
   const r = clientRates[rateKey(catId, sub)];
-  if (!r || !r.monthlyFee || r.monthlyFee <= 0) return false;
+  if (!r) return false;
+  // その月の有効月額が0以下なら課金しない
+  const effFee = getEffectiveMonthlyFee(catId, sub, year, monthIdx);
+  if (!effFee || effFee <= 0) return false;
   // 発生月未設定の場合は「常に課金（年内12ヶ月）」とみなす
   if (r.startYearMonth) {
     const [sy, sm] = r.startYearMonth.split('-').map(Number);
@@ -3100,26 +3259,22 @@ function getCategoryBillableMonths(catId, year) {
   }
   return count;
 }
-// カテゴリ単位の月額（その月に課金対象となる配下サブの月額合計）
+// カテゴリ単位の実際の月額（その月に課金対象となる配下サブの実額合計＝月額＋スポット）
 function getCategoryMonthlyFee(catId, year, monthIdx) {
   let total = 0;
   const subs = getSubcats(catId);
   const allSubs = subs.length ? subs : [''];
   for (const sub of allSubs) {
-    if (isMonthBillable(catId, sub, year, monthIdx)) {
-      total += getMonthlyFee(catId, sub);
-    }
+    total += getActualMonthlyFee(catId, sub, year, monthIdx);
   }
   return total;
 }
-// 全体：その月の月額合計
+// 全体：その月の実際月額合計
 function getOverallMonthlyFee(year, monthIdx) {
   let total = 0;
   Object.keys(clientRates).forEach(k => {
     const [catId, sub] = k.split('||');
-    if (isMonthBillable(catId, sub, year, monthIdx)) {
-      total += clientRates[k]?.monthlyFee || 0;
-    }
+    total += getActualMonthlyFee(catId, sub, year, monthIdx);
   });
   return total;
 }
@@ -3277,48 +3432,57 @@ function renderReportClients(year, pairs) {
 
   for (const p of pairs) {
     const cat = p.catId ? getCat(p.catId) : null;
-    const fee = getMonthlyFee(p.catId, p.sub);
-    let yearSec = 0, monthsActive = 0;
+    const fee = getCurrentEffectiveFee(p.catId, p.sub);  // 現行月額（履歴の最新）
+    const hasHist = hasFeeHistory(p.catId, p.sub);
+    let yearSec = 0, monthsActive = 0, yearFee = 0;
     let monthRateSum = 0, monthRateCount = 0;
     let cells = '';
+    let hasSpot = false;
     months.forEach(m => {
       const sec = getMonthlySeconds(p.catId, p.sub, year, m);
       const billable = isMonthBillable(p.catId, p.sub, year, m);
+      const actualFee = getActualMonthlyFee(p.catId, p.sub, year, m);
+      const spot = getSpotFee(p.catId, p.sub, year, m);
+      if (spot !== 0) hasSpot = true;
       yearSec += sec;
+      yearFee += actualFee;
       monthTotals[m] += sec;
       if (sec > 0) {
         monthsActive++;
-        if (billable) {
-          const rate = fee / (sec / 3600);
+        if (billable && actualFee > 0) {
+          const rate = actualFee / (sec / 3600);
           monthRateSum += rate;
           monthRateCount++;
         }
       }
       // 表示：稼働あり → 時間 / 課金中で稼働なし → 0h（赤系） / それ以外 → ー
+      const spotMark = spot !== 0 ? `<span class="spot-mark" title="スポット料金 ${spot > 0 ? '+' : ''}${fmtYenPlain(spot)}円">●</span>` : '';
       if (sec > 0) {
-        cells += `<td${billable ? ' class="num-billed"' : ''}>${fmtHours(sec)}</td>`;
+        cells += `<td${billable ? ' class="num-billed"' : ''}>${fmtHours(sec)}${spotMark}</td>`;
       } else if (billable) {
-        cells += `<td class="num-billable-zero" title="課金月だが稼働なし">0h</td>`;
+        cells += `<td class="num-billable-zero" title="課金月だが稼働なし">0h${spotMark}</td>`;
       } else {
-        cells += `<td class="num-zero">－</td>`;
+        cells += `<td class="num-zero">－${spotMark}</td>`;
       }
     });
     const billableMonths = getBillableMonths(p.catId, p.sub, year);
-    const yearFee = fee * billableMonths;
     yearTotalSec += yearSec;
     yearTotalFee += yearFee;
-    totalMonthlyFeeSum += fee;
+    totalMonthlyFeeSum += fee;  // 現行月額の合計
 
     const monthAvgRate = monthRateCount > 0 ? Math.round(monthRateSum / monthRateCount) : 0;
-    const yearRate     = yearSec > 0 && fee > 0 ? Math.round(yearFee / (yearSec / 3600)) : 0;
+    const yearRate     = yearSec > 0 && yearFee > 0 ? Math.round(yearFee / (yearSec / 3600)) : 0;
     const subLabel = p.sub || '（サブカテゴリ未設定）';
-    const catTag = cat ? `<span class="col-cat-tag" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
+    const catTag = cat ? `<span class="col-cat-tag" style="background:${cat.bg">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
+    const spotIndicator = hasSpot ? '<span class="spot-mark" title="スポット料金あり">●</span>' : '';
+    const histIndicator = hasHist ? '<span class="hist-mark" title="月額変更履歴あり">📅</span>' : '';
+    const catTagFixed = cat ? `<span class="col-cat-tag" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
 
     html += `<tr>
-      <td class="col-name">${escHtml(subLabel)}${catTag}</td>
+      <td class="col-name">${escHtml(subLabel)}${catTagFixed}${spotIndicator}${histIndicator}</td>
       ${cells}
       <td class="col-sep">${fmtHours(yearSec) || '－'}</td>
-      <td>${fee ? fmtYenPlain(fee) : '<span class="num-rate-na">未設定</span>'}</td>
+      <td>${fee ? fmtYenPlain(fee) : '<span class="num-rate-na">未設定</span>'}${hasHist ? '<span class="hist-mark-sm" title="現行月額（履歴あり）">📅</span>' : ''}</td>
       <td>${billableMonths}/12</td>
       <td>${monthsActive}/12</td>
       <td>${yearFee ? fmtYenPlain(yearFee) : '<span class="num-rate-na">―</span>'}</td>
@@ -3519,12 +3683,16 @@ function renderRateEditor() {
         const fee = r.monthlyFee || 0;
         const startYM = r.startYearMonth || '';
         const endYM   = r.endYearMonth   || '';
+        const spotFees = r.spotFees || {};
+        const spotCount = Object.keys(spotFees).filter(ym => spotFees[ym] !== 0).length;
+        const histList = Array.isArray(r.feeHistory) ? r.feeHistory : [];
+        const histCount = histList.length;
         html += `<div class="rate-row">
           <label class="rate-row-label">${escHtml(sub)}</label>
           <div class="rate-row-fields">
             <span class="rate-field-group">
               <input type="number" min="0" step="1000" data-key="${escHtml(k)}" data-field="monthlyFee" value="${fee}" placeholder="0" />
-              <span class="yen">円/月</span>
+              <span class="yen">円/月（初期）</span>
             </span>
             <span class="rate-field-group">
               <span class="rate-field-label">発生開始</span>
@@ -3534,7 +3702,19 @@ function renderRateEditor() {
               <span class="rate-field-label">終了</span>
               <input type="month" data-key="${escHtml(k)}" data-field="endYearMonth" value="${endYM}" />
             </span>
+            <button class="btn-hist-toggle" type="button" onclick="toggleFeeHistoryEditor('${escAttr(k)}',this)">
+              📅 月額変更 ${histCount > 0 ? `(${histCount})` : ''}
+            </button>
+            <button class="btn-spot-toggle" type="button" onclick="toggleSpotFeeEditor('${escAttr(k)}',this)">
+              📝 スポット ${spotCount > 0 ? `(${spotCount})` : ''}
+            </button>
           </div>
+        </div>
+        <div class="fee-history-editor" id="hist-${escAttr(k)}" style="display:none">
+          ${renderFeeHistoryRows(k)}
+        </div>
+        <div class="spot-fee-editor" id="spot-${escAttr(k)}" style="display:none">
+          ${renderSpotFeeRows(k)}
         </div>`;
       }
     }
@@ -3543,9 +3723,124 @@ function renderRateEditor() {
   body.innerHTML = html;
 }
 
+// 月額変更履歴エディタの表示切替
+function toggleFeeHistoryEditor(key, btn) {
+  const el = document.getElementById('hist-' + key);
+  if (!el) return;
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    btn.classList.add('active');
+  } else {
+    el.style.display = 'none';
+    btn.classList.remove('active');
+  }
+}
+
+// 1サブカテゴリ分の月額変更履歴行をレンダリング
+function renderFeeHistoryRows(k) {
+  const r = clientRates[k] || {};
+  const list = Array.isArray(r.feeHistory) ? r.feeHistory.slice() : [];
+  list.sort((a,b) => (a.from || '').localeCompare(b.from || ''));
+  let html = `<div class="hist-title">📅 月額変更履歴（指定月から月額が恒久的に変わる）<br><small>例：4月から月額を 30,000 → 35,000円に値上げ</small></div>`;
+  html += `<div class="hist-rows" data-key="${escHtml(k)}">`;
+  if (list.length === 0) {
+    html += `<div class="hist-empty">変更履歴はまだありません</div>`;
+  } else {
+    for (const h of list) {
+      const ym = h.from || '';
+      const amt = (typeof h.monthlyFee === 'number') ? h.monthlyFee : 0;
+      html += `<div class="hist-row">
+        <input type="month" class="hist-from"   value="${ym}" />
+        <span class="hist-arrow">から月額</span>
+        <input type="number" min="0" step="1000" class="hist-amount" value="${amt}" placeholder="35000" />
+        <span class="yen">円/月</span>
+        <button type="button" class="btn-hist-remove" onclick="this.parentElement.remove()" title="削除">✕</button>
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  html += `<button type="button" class="btn-hist-add" onclick="addFeeHistoryRow('${escAttr(k)}')">+ 変更を追加</button>`;
+  return html;
+}
+
+function addFeeHistoryRow(key) {
+  const wrap = document.querySelector(`.hist-rows[data-key="${key.replace(/"/g,'\\"')}"]`);
+  if (!wrap) return;
+  const emptyEl = wrap.querySelector('.hist-empty');
+  if (emptyEl) emptyEl.remove();
+  const now = new Date();
+  const defaultYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const div = document.createElement('div');
+  div.className = 'hist-row';
+  div.innerHTML = `
+    <input type="month" class="hist-from" value="${defaultYM}" />
+    <span class="hist-arrow">から月額</span>
+    <input type="number" min="0" step="1000" class="hist-amount" value="" placeholder="35000" />
+    <span class="yen">円/月</span>
+    <button type="button" class="btn-hist-remove" onclick="this.parentElement.remove()" title="削除">✕</button>
+  `;
+  wrap.appendChild(div);
+}
+
+// スポット料金エディタの表示切替
+function toggleSpotFeeEditor(key, btn) {
+  const el = document.getElementById('spot-' + key);
+  if (!el) return;
+  if (el.style.display === 'none') {
+    el.style.display = 'block';
+    btn.classList.add('active');
+  } else {
+    el.style.display = 'none';
+    btn.classList.remove('active');
+  }
+}
+
+// 1サブカテゴリ分のスポット料金行をレンダリング
+function renderSpotFeeRows(k) {
+  const r = clientRates[k] || {};
+  const spotFees = r.spotFees || {};
+  const entries = Object.keys(spotFees).sort().map(ym => ({ ym, amount: spotFees[ym] }));
+  let html = `<div class="spot-fee-title">月別スポット料金（基本月額に加算/減算）<br><small>例：5月にスポット作業 +20000円、8月は割引 -5000円</small></div>`;
+  html += `<div class="spot-fee-rows" data-key="${escHtml(k)}">`;
+  if (entries.length === 0) {
+    html += `<div class="spot-fee-empty">まだ登録されていません</div>`;
+  } else {
+    for (const e of entries) {
+      html += `<div class="spot-fee-row">
+        <input type="month" class="spot-ym"     value="${e.ym}" />
+        <input type="number" step="1000" class="spot-amount" value="${e.amount}" placeholder="20000 または -5000" />
+        <span class="yen">円</span>
+        <button type="button" class="btn-spot-remove" onclick="this.parentElement.remove()" title="削除">✕</button>
+      </div>`;
+    }
+  }
+  html += `</div>`;
+  html += `<button type="button" class="btn-spot-add" onclick="addSpotFeeRow('${escAttr(k)}')">+ 月を追加</button>`;
+  return html;
+}
+
+function addSpotFeeRow(key) {
+  const wrap = document.querySelector(`.spot-fee-rows[data-key="${key.replace(/"/g,'\\"')}"]`);
+  if (!wrap) return;
+  // emptyメッセージがあれば消す
+  const emptyEl = wrap.querySelector('.spot-fee-empty');
+  if (emptyEl) emptyEl.remove();
+  const now = new Date();
+  const defaultYM = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  const div = document.createElement('div');
+  div.className = 'spot-fee-row';
+  div.innerHTML = `
+    <input type="month" class="spot-ym" value="${defaultYM}" />
+    <input type="number" step="1000" class="spot-amount" value="" placeholder="20000 または -5000" />
+    <span class="yen">円</span>
+    <button type="button" class="btn-spot-remove" onclick="this.parentElement.remove()" title="削除">✕</button>
+  `;
+  wrap.appendChild(div);
+}
+
 function saveRates() {
   const inputs = document.querySelectorAll('#rateEditorBody input[data-key]');
-  const grouped = {}; // key → { monthlyFee, startYearMonth, endYearMonth }
+  const grouped = {};
   inputs.forEach(input => {
     const key   = input.getAttribute('data-key');
     const field = input.getAttribute('data-field');
@@ -3556,19 +3851,47 @@ function saveRates() {
       grouped[key][field] = input.value || '';
     }
   });
+  // スポット料金を収集
+  const spotByKey = {};
+  document.querySelectorAll('.spot-fee-rows').forEach(wrap => {
+    const key = wrap.getAttribute('data-key');
+    const map = {};
+    wrap.querySelectorAll('.spot-fee-row').forEach(row => {
+      const ym = row.querySelector('.spot-ym').value;
+      const amt = parseInt(row.querySelector('.spot-amount').value, 10);
+      if (ym && !isNaN(amt) && amt !== 0) map[ym] = amt;
+    });
+    spotByKey[key] = map;
+  });
+
+  // 月額変更履歴を収集
+  const histByKey = {};
+  document.querySelectorAll('.hist-rows').forEach(wrap => {
+    const key = wrap.getAttribute('data-key');
+    const list = [];
+    wrap.querySelectorAll('.hist-row').forEach(row => {
+      const ym = row.querySelector('.hist-from').value;
+      const amt = parseInt(row.querySelector('.hist-amount').value, 10);
+      if (ym && !isNaN(amt) && amt >= 0) list.push({ from: ym, monthlyFee: amt });
+    });
+    list.sort((a,b) => a.from.localeCompare(b.from));
+    histByKey[key] = list;
+  });
+
   const newRates = {};
   Object.keys(grouped).forEach(k => {
     const g = grouped[k];
-    // 月額が0でも 発生月の設定がされていれば保持する（後で月額を入れる準備として）
-    if ((g.monthlyFee && g.monthlyFee > 0) || g.startYearMonth) {
-      newRates[k] = {
-        monthlyFee: g.monthlyFee || 0,
-      };
+    const spots = spotByKey[k] || {};
+    const hist  = histByKey[k] || [];
+    if ((g.monthlyFee && g.monthlyFee > 0) || g.startYearMonth || Object.keys(spots).length > 0 || hist.length > 0) {
+      newRates[k] = { monthlyFee: g.monthlyFee || 0 };
       if (g.startYearMonth) newRates[k].startYearMonth = g.startYearMonth;
       if (g.endYearMonth)   newRates[k].endYearMonth   = g.endYearMonth;
+      if (Object.keys(spots).length > 0) newRates[k].spotFees = spots;
+      if (hist.length > 0) newRates[k].feeHistory = hist;
     }
   });
-  // 入力欄に出てこなかった（カテゴリ・サブカテゴリが既に削除済みなど）キーは保持
+  // 入力欄に出てこなかったキーは保持
   Object.keys(clientRates).forEach(k => {
     const found = Array.from(inputs).some(i => i.getAttribute('data-key') === k);
     if (!found) newRates[k] = clientRates[k];
@@ -3576,7 +3899,6 @@ function saveRates() {
   clientRates = newRates;
   saveClientRates();
   closeModal('rateModal');
-  // レポートが開いていれば再描画
   if (document.getElementById('reportModal').classList.contains('open')) {
     renderReport();
   }
@@ -3710,14 +4032,58 @@ const GDRIVE_FOLDER_NAME = 'タスク管理v3-同期データ';
 const GDRIVE_FILE_NAME   = 'data.json';
 const SYNC_DEBOUNCE_MS   = 3000;
 
-let _gdriveTokenClient = null;
-let _gdriveAccessToken = null;
-let _gdriveFolderId    = localStorage.getItem('gdriveFolderId') || null;
-let _gdriveFileId      = localStorage.getItem('gdriveFileId')   || null;
-let _gdriveLastSync    = parseInt(localStorage.getItem('gdriveLastSync') || '0', 10);
-let _syncStatus        = 'idle';   // 'idle'|'syncing'|'ok'|'error'|'unauth'|'noconfig'
-let _syncMessage       = '';
-let _syncDebounceTimer = null;
+let _gdriveTokenClient    = null;
+let _gdriveAccessToken    = null;
+let _gdriveTokenExpiresAt = 0;
+let _gdriveFolderId       = localStorage.getItem('gdriveFolderId') || null;
+let _gdriveFileId         = localStorage.getItem('gdriveFileId')   || null;
+let _gdriveLastSync       = parseInt(localStorage.getItem('gdriveLastSync') || '0', 10);
+let _syncStatus           = 'idle';   // 'idle'|'syncing'|'ok'|'error'|'unauth'|'noconfig'
+let _syncMessage          = '';
+let _syncDebounceTimer    = null;
+let _silentReauthTried    = false;
+
+// ── トークンキャッシュ（再認証スキップ用） ─────────────────────────
+function _saveTokenCache(token, expiresIn) {
+  _gdriveAccessToken    = token;
+  _gdriveTokenExpiresAt = Date.now() + (expiresIn || 3600) * 1000;
+  try {
+    localStorage.setItem('gdriveTokenCache', JSON.stringify({
+      token, expiresAt: _gdriveTokenExpiresAt
+    }));
+  } catch (_) {}
+}
+function _loadTokenCache() {
+  try {
+    const c = JSON.parse(localStorage.getItem('gdriveTokenCache') || 'null');
+    if (c && c.token && c.expiresAt > Date.now() + 60000) {  // 1分余裕
+      _gdriveAccessToken    = c.token;
+      _gdriveTokenExpiresAt = c.expiresAt;
+      return true;
+    }
+  } catch (_) {}
+  return false;
+}
+function _clearTokenCache() {
+  _gdriveAccessToken    = null;
+  _gdriveTokenExpiresAt = 0;
+  try { localStorage.removeItem('gdriveTokenCache'); } catch (_) {}
+}
+
+// ── サイレント再認証（同意済みなら画面を出さずに新トークン取得） ──
+function _attemptSilentReauth() {
+  if (_silentReauthTried) return false;
+  _silentReauthTried = true;
+  setTimeout(() => { _silentReauthTried = false; }, 30000);  // 30秒後に再試行可
+  const tc = gdriveEnsureTokenClient();
+  if (!tc) return false;
+  try {
+    tc.requestAccessToken({ prompt: '' });
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
 
 function isGdriveAutoSyncEnabled() { return localStorage.getItem('gdriveAutoSync') === '1'; }
 function setGdriveAutoSync(on) {
@@ -3783,15 +4149,22 @@ function gdriveEnsureTokenClient() {
     scope: GDRIVE_SCOPE,
     callback: (resp) => {
       if (resp && resp.access_token) {
-        _gdriveAccessToken = resp.access_token;
+        _saveTokenCache(resp.access_token, resp.expires_in);
         setSyncStatus('ok', '認証成功');
-        gdriveSync({ silent:false });
+        gdriveSync({ silent:true });   // 認証直後の同期はサイレントに
       } else {
         setSyncStatus('error', '認証応答が空でした');
       }
     },
     error_callback: (err) => {
-      setSyncStatus('error', '認証エラー: ' + (err && err.message ? err.message : 'unknown'));
+      // サイレント再認証失敗時はステータスのみ更新（画面は出さない）
+      const msg = err && err.message ? err.message : 'unknown';
+      if (msg && msg.indexOf('popup') !== -1) {
+        // popup_blocked or popup_closed: ユーザー操作待ち
+        setSyncStatus('unauth', '認証が必要です（バッジをクリック）');
+      } else {
+        setSyncStatus('error', '認証エラー: ' + msg);
+      }
     },
   });
   return _gdriveTokenClient;
@@ -3816,7 +4189,7 @@ function gdriveSignOut() {
   if (_gdriveAccessToken && window.google && window.google.accounts) {
     try { window.google.accounts.oauth2.revoke(_gdriveAccessToken, () => {}); } catch (_) {}
   }
-  _gdriveAccessToken = null;
+  _clearTokenCache();
   setSyncStatus('unauth', 'サインアウトしました');
 }
 
@@ -3830,9 +4203,10 @@ async function _driveApi(path, opts) {
   });
   const res = await fetch(url, init);
   if (res.status === 401) {
-    _gdriveAccessToken = null;
-    setSyncStatus('unauth', '認証期限切れ。再認証してください。');
-    throw new Error('認証期限切れ');
+    _clearTokenCache();
+    setSyncStatus('unauth', '認証期限切れ。サイレント再認証中...');
+    _attemptSilentReauth();
+    throw new Error('認証期限切れ（再取得を試行中）');
   }
   if (!res.ok) {
     const txt = await res.text();
@@ -4034,10 +4408,16 @@ async function gdriveSync(opts) {
   }
 }
 
-// ウィンドウフォーカス時に自動同期（端末切り替え時に最新化）
+// ウィンドウフォーカス時：自動同期 + 長時間タイマー確認
 window.addEventListener('focus', () => {
   if (isGdriveAutoSyncEnabled() && _gdriveAccessToken) {
     gdriveSync({ silent:true });
+  }
+  _checkLongRunningTimerOnFocus();
+});
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) {
+    _checkLongRunningTimerOnFocus();
   }
 });
 
@@ -4162,8 +4542,24 @@ renderTimer();   // ⏱  v3 業務タイマー初期化
   if (localStorage.getItem('gdriveAutoSync') === null) {
     localStorage.setItem('gdriveAutoSync', '1');
   }
-  // ClientID 設定済みでも認証はユーザー操作が必要
-  setSyncStatus('unauth', '右上の同期バッジから認証してください');
+  // ── キャッシュからトークン復元 ──
+  if (_loadTokenCache()) {
+    setSyncStatus('ok', 'キャッシュから復元（自動同期中）');
+    // 自動同期ONなら起動時に同期（サイレント）
+    setTimeout(() => {
+      if (isGdriveAutoSyncEnabled()) gdriveSync({ silent:true });
+    }, 800);
+  } else {
+    // SDK ロード後にサイレント再認証を試みる（同意済みなら画面は出ない）
+    setSyncStatus('unauth', '認証準備中...');
+    setTimeout(() => {
+      if (window.google && window.google.accounts) {
+        _attemptSilentReauth();
+      } else {
+        setSyncStatus('unauth', '右上の同期バッジから認証してください');
+      }
+    }, 1500);
+  }
 })();
 </script>
 </body>
