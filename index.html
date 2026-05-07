@@ -3473,13 +3473,12 @@ function renderReportClients(year, pairs) {
     const monthAvgRate = monthRateCount > 0 ? Math.round(monthRateSum / monthRateCount) : 0;
     const yearRate     = yearSec > 0 && yearFee > 0 ? Math.round(yearFee / (yearSec / 3600)) : 0;
     const subLabel = p.sub || '（サブカテゴリ未設定）';
-    const catTag = cat ? `<span class="col-cat-tag" style="background:${cat.bg">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
     const spotIndicator = hasSpot ? '<span class="spot-mark" title="スポット料金あり">●</span>' : '';
     const histIndicator = hasHist ? '<span class="hist-mark" title="月額変更履歴あり">📅</span>' : '';
-    const catTagFixed = cat ? `<span class="col-cat-tag" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
+    const catTag = cat ? `<span class="col-cat-tag" style="background:${cat.bg};color:${cat.color}">${cat.emoji} ${escHtml(cat.name)}</span>` : '';
 
     html += `<tr>
-      <td class="col-name">${escHtml(subLabel)}${catTagFixed}${spotIndicator}${histIndicator}</td>
+      <td class="col-name">${escHtml(subLabel)}${catTag}${spotIndicator}${histIndicator}</td>
       ${cells}
       <td class="col-sep">${fmtHours(yearSec) || '－'}</td>
       <td>${fee ? fmtYenPlain(fee) : '<span class="num-rate-na">未設定</span>'}${hasHist ? '<span class="hist-mark-sm" title="現行月額（履歴あり）">📅</span>' : ''}</td>
