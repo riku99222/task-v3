@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="タスクv3">
@@ -4203,9 +4204,8 @@ async function _driveApi(path, opts) {
   const res = await fetch(url, init);
   if (res.status === 401) {
     _clearTokenCache();
-    setSyncStatus('unauth', '認証期限切れ。サイレント再認証中...');
-    _attemptSilentReauth();
-    throw new Error('認証期限切れ（再取得を試行中）');
+    setSyncStatus('unauth', '認証期限切れ。バッジをクリックして再認証してください。');
+    throw new Error('認証期限切れ');
   }
   if (!res.ok) {
     const txt = await res.text();
@@ -4549,15 +4549,9 @@ renderTimer();   // ⏱  v3 業務タイマー初期化
       if (isGdriveAutoSyncEnabled()) gdriveSync({ silent:true });
     }, 800);
   } else {
-    // SDK ロード後にサイレント再認証を試みる（同意済みなら画面は出ない）
-    setSyncStatus('unauth', '認証準備中...');
-    setTimeout(() => {
-      if (window.google && window.google.accounts) {
-        _attemptSilentReauth();
-      } else {
-        setSyncStatus('unauth', '右上の同期バッジから認証してください');
-      }
-    }, 1500);
+    // 起動時の自動サイレント認証は popup blocker に阻まれるため、
+    // ユーザーがバッジをクリックしたタイミングで認証する方式に統一。
+    setSyncStatus('unauth', '右上の同期バッジから認証してください');
   }
 })();
 </script>
